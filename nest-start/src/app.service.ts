@@ -4,6 +4,9 @@ import axios from 'axios';
 @Injectable()
 export class AppService {
   getHello(): string {
+
+    console.log("pwd=> ", process.cwd());
+
     return 'Hello World!';
   }
 
