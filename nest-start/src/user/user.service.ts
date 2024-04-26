@@ -32,6 +32,18 @@ export class UserService {
     return deletedCat;
   }
 
+  async testPromise(id: string): Promise<any> {
+    return new Promise((resolve, reject) => {
+      setTimeout(() => {
+        if (id === '1') {
+          reject('error-reject');
+        } else {
+          resolve('resolve' + id);
+        }
+      }, 1000);
+    });
+  }
+
   /*  create(createUserDto: CreateUserDto) {
     return 'This action adds a new user';
   }

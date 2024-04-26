@@ -2,6 +2,7 @@ import { Controller, Get, Post, Body, Param, Delete } from '@nestjs/common';
 import { UserService } from './user.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { User } from './schema/user.schema';
+import e from 'express';
 
 @Controller('user')
 export class UserController {
@@ -24,6 +25,16 @@ export class UserController {
   @Delete(':id')
   async delete(@Param('id') id: string) {
     return this.userService.delete(id);
+  }
+
+  @Get('promise/:id')
+  async testPromise(@Param('id') id: string) {
+    try {
+      const res = await this.userService.testPromise(id);
+      return res;
+    } catch (e) {
+      return 'Controller-err ' + e;
+    }
   }
 
   /* @Post()
