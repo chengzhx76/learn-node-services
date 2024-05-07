@@ -1,0 +1,35 @@
+<html>
+
+<head>
+  <script>
+    // var socket = new WebSocket("ws://example.com/socket");
+    // var socket = new WebSocket("ws://localhost:3001/api/ws");
+    // var socket = new WebSocket("ws://localhost:3001/api/webgalsync");
+    var socket = new WebSocket("ws://localhost:8080");
+
+    // WebSocket event listeners
+    socket.onopen = function () {
+      console.log("WebSocket connection established.");
+    };
+
+    socket.onmessage = function (event) {
+      var message = event.data;
+      console.log("Received message: " + message);
+    };
+
+    socket.onclose = function (event) {
+      console.log("WebSocket connection closed with code: " + event.code);
+    };
+
+    // Sending messages
+    socket.send("Hello, server!");
+
+    // Closing the connection
+    socket.close();
+    
+  </script>
+</head>
+
+<body></body>
+
+</html>

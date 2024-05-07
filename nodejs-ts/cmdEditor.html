@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <title>基于 document.execCommand 实现富文本编辑器 | Yusen &#39;s Blog | 学习弯道超车的技巧！</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+</head>
+
+<body>
+  <main id="main">
+    <div class="container body-wrap">
+      <article class="page-article fade" itemprop="blogPage">
+        <div class="post-content page-content" id="page-content" itemprop="pageContent">
+          <style>
+            .editor-tools .btn {
+              margin: 0 5px 5px 0;
+              padding: 0 1em;
+              line-height: 32px;
+              color: #fff;
+              background: #3F51B5;
+              border: 1px solid #3949ab;
+              border-radius: 3px;
+              cursor: pointer
+            }
+
+            .editor-tools .btn:hover {
+              opacity: .8
+            }
+
+            .editor-content {
+              height: 50vh;
+              overflow-y: auto
+            }
+
+            .editor-content i {
+              font-style: italic
+            }
+
+            .editor-content dd {
+              padding-left: 20px;
+              margin-bottom: 20px
+            }
+          </style>
+          <div class="editor">
+            <div class="editor-tools"></div>
+            <div class="editor-content card" contenteditable="">
+              <p>
+                当文档对象被转换为设计模式的时候（选中，设置contentEditable等），文档对象提供了一个<code>execCommand方法，通过给这这个方法传递参数命令可以操作可编辑区域的内容。这个方法的命令大多数是对文档选中区域的操作</code>
+                &nbsp;(如bold, italics等), 也可以插入一个元素(如增加一个a链接) 或者修改一个完整行
+                (如缩进).。当元素被设置了contentEditable，通过执行<code>execCommand</code>
+                &nbsp;方法可以对当前活动元素进行很多操作。
+              </p>
+              <h2 id="语法">语法</h2>
+              <pre class="syntaxbox">
+                                    <em>bool</em>
+                                    = document.execCommand(<em>aCommandName</em>
+                                    , <em>aShowDefaultUI</em>
+                                    , <em>aValueArgument</em>
+                                    )
+                                </pre>
+              <h3 id="返回值">返回值</h3>
+              <p>
+                一个
+                <a title="此页面仍未被本地化, 期待您的翻译!" href="/zh-CN/docs/Web/JavaScript/Reference/Boolean">
+                  <code>Boolean</code>
+                </a>
+                ，如果是 &nbsp;<code>false</code>
+                则表示操作不被支持或未被启用。
+              </p>
+              <h3 id="参数">参数</h3>
+              <dl>
+                <dt>
+                  <code>aCommandName</code>
+                </dt>
+                <dd>
+                  一个
+                  <a title="一个UTF-16字符串，JavaScript 正是使用了这种编码的字符串，所以&nbsp;DOMString&nbsp;直接被映射为（is mapped directly to）String。"
+                    href="/zh-CN/docs/Web/API/DOMString">
+                    <code>DOMString</code>
+                  </a>
+                  ，命令的名称。可用命令列表请参阅 &nbsp;<a href="#命令">命令</a>
+                  。
+                </dd>
+                <dt>
+                  <code>aShowDefaultUI</code>
+                </dt>
+                <dd>
+                  一个
+                  <a title="此页面仍未被本地化, 期待您的翻译!" href="/zh-CN/docs/Web/JavaScript/Reference/Boolean">
+                    <code>Boolean</code>
+                  </a>
+                  是否展示用户界面，一般为 false。Mozilla 没有实现。
+                </dd>
+                <dt>
+                  <code>aValueArgument</code>
+                </dt>
+                <dd>一些命令需要一些额外的参数值（如insertimage需要提供这个image的url）。默认为null。</dd>
+              </dl>
+              <h3 id="命令">命令</h3>
+              <dl>
+                <dt>
+                  <code>backColor</code>
+                </dt>
+                <dd>
+                  修改文档的背景颜色。在styleWithCss模式下，则只影响容器元素的背景颜色。这需要一个
+                  <a title="CSS 数据类型 <color> 表示一种标准RGB色彩空间（sRGB color space）的颜色。一种颜色可以用以下任意的方式来描述："
+                    href="/zh-CN/docs/Web/CSS/color_value">
+                    <code>&lt;color &gt;</code>
+                  </a>
+                  类型的字符串值作为参数传入。注意，IE浏览器用这个设置文字的背景颜色。
+                </dd>
+                <dt>
+                  <code>bold</code>
+                </dt>
+                <dd>
+                  开启或关闭选中文字或插入点的粗体字效果。IE浏览器使用
+                  <a title="Strong 元素 (<strong>)表示文本十分重要，一般用粗体显示。" href="/zh-CN/docs/Web/HTML/Element/strong">
+                    <code>&lt;strong &gt;</code>
+                  </a>
+                  标签，而不是
+                  <a title="HTML <b> 元素表示相对于普通文本字体上的区别，但不表示任何特殊的强调或者关联。它通常用在摘要中的关键字、审查中的产品名称或者其他需要显示为加粗的文字区域。它的另一个使用例子是用来标记一篇文章中每一段的引言。"
+                    href="/zh-CN/docs/Web/HTML/Element/b">
+                    <code>&lt;b &gt;</code>
+                  </a>
+                  标签。
+                </dd>
+                <dt>
+                  <code>contentReadOnly</code>
+                </dt>
+                <dd>通过传入一个布尔类型的参数来使能文档内容的可编辑性。(IE浏览器不支持)</dd>
+                <dt>
+                  <code>copy</code>
+                </dt>
+                <dd>拷贝当前选中内容到剪贴板。启用这个功能的条件因浏览器不同而不同，而且不同时期，其启用条件也不尽相同。使用之前请检查浏览器兼容表，以确定是否可用。</dd>
+                <dt>
+                  <code>createLink</code>
+                </dt>
+                <dd>
+                  <code>将选中内容创建为一个锚链接。这个命令需要一个HREF URI字符串作为参数值传入。URI必须包含至少一个字符，例如一个空格。（浏览器会创建一个空链接）</code>
+                </dd>
+                <dt>
+                  <code>cut</code>
+                </dt>
+                <dd>&nbsp;剪贴当前选中的文字并复制到剪贴板。启用这个功能的条件因浏览器不同而不同，而且不同时期，其启用条件也不尽相同。使用之前请检查浏览器兼容表，以确定是否可用。</dd>
+                <dt>
+                  <code>decreaseFontSize</code>
+                </dt>
+                <dd>
+                  &nbsp;给选中文字加上
+                  <a title="此页面仍未被本地化, 期待您的翻译!" class="new" href="/zh-CN/docs/Web/HTML/Element/small">
+                    <code>&lt;small &gt;</code>
+                  </a>
+                  标签，或在选中点插入该标签。(IE浏览器不支持)
+                </dd>
+                <dt>
+                  <code>delete</code>
+                </dt>
+                <dd>删除选中部分.</dd>
+                <dt>
+                  <code>enableInlineTableEditing</code>
+                </dt>
+                <dd>启用或禁用表格行和列插入和删除控件。(IE浏览器不支持)</dd>
+                <dt>
+                  <code>enableObjectResizing</code>
+                </dt>
+                <dd>启用或禁用图像和其他对象的大小可调整大小手柄。(IE浏览器不支持)</dd>
+                <dt>
+                  <code>fontName</code>
+                </dt>
+                <dd>在插入点或者选中文字部分修改字体名称. 需要提供一个字体名称字符串 (例如："Arial")作为参数。</dd>
+                <dt>
+                  <code>fontSize</code>
+                </dt>
+                <dd>在插入点或者选中文字部分修改字体大小. 需要提供一个HTML字体尺寸 (1-7) 作为参数。</dd>
+                <dt>
+                  <code>foreColor</code>
+                </dt>
+                <dd>在插入点或者选中文字部分修改字体颜色. 需要提供一个颜色值字符串作为参数。</dd>
+                <dt>
+                  <code>formatBlock</code>
+                </dt>
+                <dd>添加一个HTML块式标签在包含当前选择的行, 如果已经存在了，更换包含该行的块元素 (在 Firefox中, BLOCKQUOTE 是一个例外
+                  -它将包含任何包含块元素).&nbsp;需要提供一个标签名称字符串作为参数。几乎所有的块样式标签都可以使用(例如. "H1", "P", "DL",
+                  "BLOCKQUOTE").&nbsp;(IE浏览器仅仅支持标题标签 H1 - H6, ADDRESS, 和 PRE,使用时还必须包含标签分隔符 &lt;&gt;, 例如 "&lt;H1 &gt;".)
+                </dd>
+                <dt>
+                  <code>forwardDelete</code>
+                </dt>
+                <dd>删除光标所在位置的字符。 和按下删除键一样。</dd>
+                <dt>
+                  <code>heading</code>
+                </dt>
+                <dd>添加一个标题标签在光标处或者所选文字上。 需要提供标签名称字符串作为参数 (例如. "H1", "H6"). (IE 和 Safari不支持)</dd>
+                <dt>
+                  <code>hiliteColor</code>
+                </dt>
+                <dd>更改选择或插入点的背景颜色。需要一个颜色值字符串作为值参数传递。&nbsp;UseCSS 必须开启此功能。(IE浏览器不支持)</dd>
+                <dt>
+                  <code>increaseFontSize</code>
+                </dt>
+                <dd>在选择或插入点周围添加一个BIG标签。(IE浏览器不支持)</dd>
+                <dt>
+                  <code>indent</code>
+                </dt>
+                <dd>缩进选择或插入点所在的行， 在 Firefox 中, 如果选择多行，但是这些行存在不同级别的缩进, 只有缩进最少的行被缩进。</dd>
+                <dt>
+                  <code>insertBrOnReturn</code>
+                </dt>
+                <dd>控制当按下Enter键时，是插入 br 标签还是把当前块元素变成两个。(IE浏览器不支持)</dd>
+                <dt>
+                  <code>insertHorizontalRule</code>
+                </dt>
+                <dd>在插入点插入一个水平线（删除选中的部分）</dd>
+                <dt>
+                  <code>insertHTML</code>
+                </dt>
+                <dd>在插入点插入一个HTML字符串（删除选中的部分）。需要一个个HTML字符串作为参数。(IE浏览器不支持)</dd>
+                <dt>
+                  <code>insertImage</code>
+                </dt>
+                <dd>在插入点插入一张图片（删除选中的部分）。需要一个image SRC URI作为参数。这个URI至少包含一个字符。空白字符也可以（IE会创建一个链接其值为null）</dd>
+                <dt>
+                  <code>insertOrderedList</code>
+                </dt>
+                <dd>在插入点或者选中文字上创建一个有序列表</dd>
+                <dt>
+                  <code>insertUnorderedList</code>
+                </dt>
+                <dd>在插入点或者选中文字上创建一个无序列表。</dd>
+                <dt>
+                  <code>insertParagraph</code>
+                </dt>
+                <dd>在选择或当前行周围插入一个段落。(IE会在插入点插入一个段落并删除选中的部分.)</dd>
+                <dt>
+                  <code>insertText</code>
+                </dt>
+                <dd>在光标插入位置插入文本内容或者覆盖所选的文本内容。</dd>
+                <dt>
+                  <code>italic</code>
+                </dt>
+                <dd>在光标插入点开启或关闭斜体字。 (Internet Explorer 使用 EM 标签，而不是 &nbsp;I &nbsp;)</dd>
+                <dt>
+                  <code>justifyCenter</code>
+                </dt>
+                <dd>对光标插入位置或者所选内容进行文字居中。</dd>
+                <dt>
+                  <code>justifyFull</code>
+                </dt>
+                <dd>对光标插入位置或者所选内容进行文本对齐。</dd>
+                <dt>
+                  <code>justifyLeft</code>
+                </dt>
+                <dd>对光标插入位置或者所选内容进行左对齐。</dd>
+                <dt>
+                  <code>justifyRight</code>
+                </dt>
+                <dd>对光标插入位置或者所选内容进行右对齐。</dd>
+                <dt>
+                  <code>outdent</code>
+                </dt>
+                <dd>对光标插入行或者所选行内容减少缩进量。</dd>
+                <dt>
+                  <code>paste</code>
+                </dt>
+                <dd>在光标位置粘贴剪贴板的内容，如果有被选中的内容，会被替换。剪贴板功能必须在 user.js 配置文件中启用。参阅 &nbsp;[1].</dd>
+                <dt>
+                  <code>redo</code>
+                </dt>
+                <dd>重做被撤销的操作。</dd>
+                <dt>
+                  <code>removeFormat</code>
+                </dt>
+                <dd>对所选内容去除所有格式</dd>
+                <dt>
+                  <code>selectAll</code>
+                </dt>
+                <dd>选中编辑区里的全部内容。</dd>
+                <dt>
+                  <code>strikeThrough</code>
+                </dt>
+                <dd>在光标插入点开启或关闭删除线。</dd>
+                <dt>
+                  <code>subscript</code>
+                </dt>
+                <dd>在光标插入点开启或关闭下角标。</dd>
+                <dt>
+                  <code>superscript</code>
+                </dt>
+                <dd>在光标插入点开启或关闭上角标。</dd>
+                <dt>
+                  <code>underline</code>
+                </dt>
+                <dd>在光标插入点开启或关闭下划线。</dd>
+                <dt>
+                  <code>undo</code>
+                </dt>
+                <dd>撤销最近执行的命令。</dd>
+                <dt>
+                  <code>unlink</code>
+                </dt>
+                <dd>去除所选的锚链接的 &lt;a &gt;标签</dd>
+                <dt>
+                  <code>useCSS</code>
+                  <span title="This deprecated API should no longer be used, but will probably still work.">
+                    <i class="icon-thumbs-down-alt"></i>
+                  </span>
+                </dt>
+                <dd>
+                  切换使用 HTML tags 还是 CSS 来生成标记. 要求一个布尔值 true/false 作为参数。注: 这个属性是逻辑上的倒退 (例如. use false to use CSS, true to
+                  use HTML).(IE不支持)<br>该属性已经废弃，使用 styleWithCSS 代替。
+                </dd>
+                <dt>
+                  <code>styleWithCSS</code>
+                </dt>
+                <dd>用这个取代 useCSS 命令。 参数如预期的那样工作, i.e. true modifies/generates 风格的标记属性, false 生成格式化元素。</dd>
+              </dl>
+            </div>
+          </div>
+          <script>
+            !function () {
+              var t = [{
+                cmd: "bold",
+                text: "加粗"
+              }, {
+                cmd: "italic",
+                text: "斜体"
+              }, {
+                cmd: "decreaseFontSize",
+                text: "小号"
+              }, {
+                cmd: "increaseFontSize",
+                text: "大号"
+              }, {
+                cmd: "underline",
+                text: "下划线"
+              }, {
+                cmd: "strikeThrough",
+                text: "删除线"
+              }, {
+                cmd: "insertOrderedList",
+                text: "有序列表"
+              }, {
+                cmd: "insertUnorderedList",
+                text: "无序列表"
+              }, {
+                cmd: "createLink",
+                text: "链接",
+                input: "请输入一个链接"
+              }, {
+                cmd: "insertImage",
+                text: "插图",
+                input: "请输入一个图片地址"
+              }, {
+                cmd: "justifyCenter",
+                text: "居中"
+              }, {
+                cmd: "justifyLeft",
+                text: "左对齐"
+              }, {
+                cmd: "justifyRight",
+                text: "右对齐"
+              }, {
+                cmd: "formatBlock",
+                text: "H1",
+                arg: "H1"
+              }, {
+                cmd: "formatBlock",
+                text: "H2",
+                arg: "H2"
+              }, {
+                cmd: "formatBlock",
+                text: "H3",
+                arg: "H3"
+              }, {
+                cmd: "formatBlock",
+                text: "H4",
+                arg: "H4"
+              }, {
+                cmd: "formatBlock",
+                text: "H5",
+                arg: "H5"
+              }, {
+                cmd: "formatBlock",
+                text: "H6",
+                arg: "H6"
+              }, {
+                cmd: "formatBlock",
+                text: "引用",
+                arg: "BLOCKQUOTE"
+              }, {
+                cmd: "formatBlock",
+                text: "PRE",
+                arg: "PRE"
+              }, {
+                cmd: "insertHorizontalRule",
+                text: "HR"
+              }]
+                , e = document.querySelector(".editor-tools");
+              document.querySelector(".editor-content"),
+                e.innerHTML = t.map(function (t) {
+                  return document.queryCommandSupported(t.cmd) ? '<button type="button" class="btn btn-default" data-cmd="' + t.cmd + '"' + (t.arg ? ' data-arg="' + t.arg + '"' : "") + (t.input ? 'data-input="' + t.input + '"' : "") + ">" + t.text + "</button>" : ""
+                }).join(""),
+                e.addEventListener("click", function (t) {
+                  var e = t.target;
+                  if ("BUTTON" === e.tagName) {
+                    var r = e.dataset
+                      , c = r.arg || r.input && window.prompt(r.input);
+                    document.execCommand(r.cmd, !0, c)
+                  }
+                })
+            }();
+          </script>
+        </div>
+      </article>
+    </div>
+  </main>
+</body>
+
+</html>
