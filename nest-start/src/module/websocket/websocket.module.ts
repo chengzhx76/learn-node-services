@@ -4,4 +4,4 @@ import { ChatWebSocketGateway } from './websocket.gateway';
 @Module({
   providers: [ChatWebSocketGateway],
 })
-export class ChatModule {}
+export class WebsocketModule {}

@@ -7,6 +7,11 @@ import {
 } from '@nestjs/websockets';
 import { Server, WebSocket } from 'ws';
 
+/*
+  ws://localhost:3000/api/ws
+  {"event":"message","data":"hi"}
+*/
+
 @WebSocketGateway({ path: '/api/ws', transports: 'websocket' })
 export class ChatWebSocketGateway {
   @WebSocketServer()
@@ -37,6 +42,22 @@ export class ChatWebSocketGateway {
     @MessageBody() data: string /* , @ConnectedSocket() client: WebSocket */,
   ): void {
     console.log('ChatWebSocketGateway.handleMessage==> ');
+    this.connectionList.forEach((socket) => {
+      const sendData = JSON.stringify({
+        event: 'message',
+        data: {
+          send: data,
+          att: 'to',
+        },
+      });
+      socket.send(sendData);
+    });
+  }
+  @SubscribeMessage('')
+  handleAllMessage(
+    @MessageBody() data: string /* , @ConnectedSocket() client: WebSocket */,
+  ): void {
+    console.log('ChatWebSocketGateway.handleAllMessage==> ');
     this.connectionList.forEach((socket) => {
       const sendData = JSON.stringify({
         event: 'message',
