@@ -2,12 +2,13 @@
 // import logo from './logo.svg';
 import './App.css';
 
-import WebSocket from './components/WebSocket'
+// import WebSocket from './components/WebSocket'
+import CustomEditor from './components/CustomEditor'
 
 function App() {
   return (
     <>
-      <WebSocket />
+      <CustomEditor />
     </>
   );
 }
