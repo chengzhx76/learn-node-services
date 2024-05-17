@@ -13,7 +13,8 @@ function parseHtml(
   editor: IDomEditor
 ): SlateElement {
   const role = elem.getAttribute('data-role') || ''
-  const list: Expression[] = [{label: '', value: ''}]
+  const expressionStr = elem.getAttribute('data-role') || ''
+  const list: Expression[] = JSON.parse(decodeURIComponent(expressionStr)) as Expression[]
   return {
     type: 'expression',
     role,
@@ -23,7 +24,7 @@ function parseHtml(
 }
 
 const parseHtmlConf = {
-  selector: 'div[data-w-e-type="link-card"]',
+  selector: 'div[data-w-e-type="expression"]',
   parseElemHtml: parseHtml,
 }
 
