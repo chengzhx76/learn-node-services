@@ -8843,7 +8843,7 @@ slate@^0.72.0:
     is-plain-object "^5.0.0"
     tiny-warning "^1.0.3"
 
-snabbdom@^3.1.0:
+snabbdom@^3.1.0, snabbdom@^3.6.2:
   version "3.6.2"
   resolved "https://registry.yarnpkg.com/snabbdom/-/snabbdom-3.6.2.tgz#57dd66878f6320497fa7f67941df356a045c75a1"
   integrity sha512-ig5qOnCDbugFntKi6c7Xlib8bA6xiJVk8O+WdFrV3wxbMqeHO0hXFQC4nAhPVWfZfi8255lcZkNhtIBINCc4+Q==

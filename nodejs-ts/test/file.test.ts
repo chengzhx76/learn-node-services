@@ -1,5 +1,12 @@
 import { test } from "vitest";
 import * as fs from "fs/promises";
+const fss = require('fs')
+import path from 'path';
+// import glob = require('glob');
+// import { glob } from 'glob'
+const {
+  glob,
+} = require('glob')
 
 test("file-copy-test", async () => {
   // let src = "D:\\test",
@@ -19,6 +26,57 @@ test("file-copy-test", async () => {
   await sleep(3000);
 });
 
+test("file-read-test", async () => {
+  
+  const jsfiles = await glob('../*.js', { ignore: 'node_modules/**' })
+  
+  await sleep(3000);
+});
+
+test("file-read2-test", async () => {
+  
+  const files = await readFile2()
+
+  console.log('==》 Found jsfiles:', files);
+  
+  await sleep(3000);
+});
+
+async function readFile2() {
+  const fileNames: string[] = [];
+  const files = await glob('./res/*.scss', { })
+  console.log('==》 filesfilesfilesfilesfiles:', files);
+  for (let i = 0; i < files.length; i++) {
+    const file = files[i]
+    const fileName = path.basename(file);
+    // fss.unlinkSync(file);
+    console.log(fileName + ' was deleted');
+    fileNames.push(fileName);
+  }
+  return files
+}
+
+async function readFile() {
+
+  // const fileNames: string[] = [];
+  await glob('D:\\web_project\\learn-node-services\\nodejs-ts\\test\\res\\*', {}, (err, files) => {
+    if (err) {
+      console.error('Error finding files:', err);
+      return;
+    }
+    console.log('Found files:', files);
+    /* for (let i = 0; i < files.length; i++) {
+      const file = files[i]
+      const fileName = path.basename(file);
+      console.log(fileName + ' was deleted');
+      fileNames.push(fileName);
+    } */
+  })
+  // return fileNames;
+}
+
 function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
+
+
