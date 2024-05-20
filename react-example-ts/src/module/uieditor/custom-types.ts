@@ -4,12 +4,12 @@ type EmptyText = {
 }
 
 export type Expression = {
-  label: '',
-  value: '',
+  label: string,
+  value: string,
 }
 
-export type ExpressionElement = {
-  type: 'expression'
+export type UiEditorElement = {
+  type: 'uieditor'
   role: string
   list: Expression[]
   children: EmptyText[]
