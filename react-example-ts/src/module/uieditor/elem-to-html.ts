@@ -23,9 +23,9 @@ function uieditorToHtml(elem: SlateElement, childrenHtml: string): string {
     const { value, label } = list[i]
     option = option + `<option value="${value}">${label}</option>`
   }
-  const html = `<select data-w-e-type="uieditor" data-list="${listStr}" data-w-e-is-void data-w-e-is-inline">${option}</select>`
+  const html = `<span data-w-e-type="uieditor" data-list="${listStr}" data-w-e-is-void data-w-e-is-inline"><select>${option}</select></span>`
+  // const html = `<span data-w-e-type="uieditor" data-list="${listStr}" data-w-e-is-void data-w-e-is-inline">${role}</span>`
   return html
-  // return `<a data-w-e-type="uieditor" uieditor="${uieditorStr}" data-w-e-is-void data-w-e-is-inline">${role}</a>`
 }
 
 // 配置

@@ -22,9 +22,26 @@ function renderUiEditor(elem: SlateElement, children: VNode[] | null, editor: ID
   }
 
   const vselectNode = h(
-    'select',
-    {},
-    options
+    'span',
+    {
+      props: {
+        contentEditable: false, // 不可编辑
+      },
+      style: {
+        marginLeft: '3px',
+        marginRight: '3px',
+        backgroundColor: 'var(--w-e-textarea-slight-bg-color)',
+        borderRadius: '3px',
+        padding: '0 3px',
+      },
+    },
+    [
+      h(
+        'select',
+        {},
+        options
+      )
+    ]
   )
 
   return vselectNode

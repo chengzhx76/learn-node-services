@@ -24,7 +24,7 @@ function parseHtml(
 }
 
 const parseHtmlConf = {
-  selector: 'div[data-w-e-type="uieditor"]',
+  selector: 'span[data-w-e-type="uieditor"]',
   parseElemHtml: parseHtml,
 }
 

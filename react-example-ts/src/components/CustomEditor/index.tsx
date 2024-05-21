@@ -3,9 +3,19 @@ import "@wangeditor/editor/dist/css/style.css";
 import React, { useState, useRef, useEffect } from "react";
 import { Editor } from "@wangeditor/editor-for-react";
 import { IDomEditor, IEditorConfig, Boot } from "@wangeditor/editor";
-// import mentionModule, { MentionElement } from "../../module/mention";
+import mentionModule, { MentionElement } from "../../module/mention";
 import uieditorModule, { UiEditorElement } from "../../module/uieditor";
+Boot.registerModule(mentionModule);
 Boot.registerModule(uieditorModule);
+
+// 显示弹框
+function showModal(editor: IDomEditor) {
+  console.log("====>showModal");
+}
+// 隐藏弹框
+function hideModal(editor: IDomEditor) {
+  console.log("====>showModal");
+}
 
 function addPay(editor: IDomEditor) {
   console.log("====>addPay");
@@ -30,10 +40,14 @@ function CustomEditor() {
         addPay, // 必须
         addExpression, // 必须
       },
+      mentionConfig: {
+        showModal,
+        hideModal,
+      },
     },
   };
 
-  /* function insertMention() {
+  function insertMention() {
     const mentionNode: MentionElement = {
       type: "mention", // 必须是 'mention'
       value: "张三", // 文本
@@ -43,16 +57,16 @@ function CustomEditor() {
 
     if (editor) {
       editor.restoreSelection(); // 恢复选区
-      editor.deleteBackward("character"); // 删除 '@'
+      // editor.deleteBackward("character"); // 删除 '@'
       editor.insertNode(mentionNode); // 插入 mention
-      editor.move(1); // 移动光标
+      // editor.move(1); // 移动光标
     }
-  } */
+  }
 
-  function insertExpression() {
+  function insertUiEditor() {
     const mentionNode: UiEditorElement = {
       type: "uieditor",
-      role: "",
+      role: "Role-he",
       list: [
         {
           label: "哈哈",
@@ -105,11 +119,12 @@ function CustomEditor() {
           onCreated={handleCreated}
           onChange={handleChange}
           mode="default"
-          style={{ height: "500px", overflowY: "hidden" }}
+          style={{ height: "300px", overflowY: "hidden" }}
         />
       </div>
       <div style={{ marginTop: "15px" }}>{html}</div>
-      <button onClick={insertExpression}>insertMention</button>
+      <button onClick={insertMention}>insertMention</button>
+      <button onClick={insertUiEditor}>insertUiEditor</button>
     </>
   );
 }
