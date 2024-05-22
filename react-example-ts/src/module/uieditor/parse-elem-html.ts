@@ -5,9 +5,9 @@
 
 import { DOMElement } from '../utils/dom'
 import { IDomEditor, SlateDescendant, SlateElement } from '@wangeditor/editor'
-import { UiEditorElement, Expression } from './custom-types'
+import { UiExpressionElement, Expression, UiPlayElement } from './custom-types'
 
-function parseHtml(
+function uiexpressionParseHtml(
   elem: DOMElement,
   children: SlateDescendant[],
   editor: IDomEditor
@@ -16,16 +16,38 @@ function parseHtml(
   const listStr = elem.getAttribute('data-list') || ''
   const list: Expression[] = JSON.parse(decodeURIComponent(listStr)) as Expression[]
   return {
-    type: 'uieditor',
+    type: 'uiexpression',
     role,
     list,
     children: [{ text: '' }], // void node 必须有一个空白 text
-  } as UiEditorElement
+  } as UiExpressionElement
 }
 
-const parseHtmlConf = {
-  selector: 'span[data-w-e-type="uieditor"]',
-  parseElemHtml: parseHtml,
+function uiplayParseHtml(
+  elem: DOMElement,
+  children: SlateDescendant[],
+  editor: IDomEditor
+): SlateElement {
+  const line = elem.getAttribute('data-line') || ''
+  return {
+    type: 'uiplay',
+    line,
+    children: [{ text: '' }], // void node 必须有一个空白 text
+  } as UiPlayElement
 }
 
-export default parseHtmlConf
+
+const uiexpressionParseHtmlConf = {
+  selector: 'span[data-w-e-type="uiexpression"]',
+  parseElemHtml: uiexpressionParseHtml,
+}
+
+const uiplayParseHtmlConf = {
+  selector: 'span[data-w-e-type="uiplay"]',
+  parseElemHtml: uiplayParseHtml,
+}
+
+export {
+  uiexpressionParseHtmlConf,
+  uiplayParseHtmlConf,
+}

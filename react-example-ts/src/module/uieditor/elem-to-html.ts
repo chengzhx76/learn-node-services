@@ -4,7 +4,7 @@
  */
 
 import { SlateElement } from '@wangeditor/editor'
-import { UiEditorElement } from './custom-types'
+import { UiExpressionElement, UiPlayElement } from './custom-types'
 
 /*
 <select>
@@ -15,23 +15,37 @@ import { UiEditorElement } from './custom-types'
 </select>
 */
 // 生成 html 的函数
-function uieditorToHtml(elem: SlateElement, childrenHtml: string): string {
-  const { role = '', list = [] } = elem as UiEditorElement
+function uieexpressionToHtml(elem: SlateElement, childrenHtml: string): string {
+  const { role = '', list = [] } = elem as UiExpressionElement
   const listStr = encodeURIComponent(JSON.stringify(list))
   let option = ''
   for (let i = 0; i < list.length; i++) {
     const { value, label } = list[i]
     option = option + `<option value="${value}">${label}</option>`
   }
-  const html = `<span data-w-e-type="uieditor" data-list="${listStr}" data-w-e-is-void data-w-e-is-inline"><select>${option}</select></span>`
-  // const html = `<span data-w-e-type="uieditor" data-list="${listStr}" data-w-e-is-void data-w-e-is-inline">${role}</span>`
+  // const html = `<span data-w-e-type="uiexpression" data-list="${listStr}" data-w-e-is-void data-w-e-is-inline"><select>${option}</select></span>`
+  const html = `<select data-w-e-type="uiexpression" data-list="${listStr}" data-w-e-is-void data-w-e-is-inline">${option}</select>`
+  return html
+}
+
+// 生成 html 的函数
+function uiplayToHtml(elem: SlateElement, childrenHtml: string): string {
+  const { line = '' } = elem as UiPlayElement
+  const html = `<span class="ui-play" data-w-e-type="uiplay" data-line="${line}" data-w-e-is-void data-w-e-is-inline">Play</span>`
   return html
 }
 
 // 配置
-const elemToHtmlConf = {
-  type: 'uieditor', // 节点 type ，重要！！！
-  elemToHtml: uieditorToHtml,
+const uiexpressionElemToHtmlConf = {
+  type: 'uiexpression', // 节点 type ，重要！！！
+  elemToHtml: uieexpressionToHtml,
+}
+const uiplayElemToHtmlConf = {
+  type: 'uiplay',
+  elemToHtml: uiplayToHtml,
 }
 
-export default elemToHtmlConf
+export {
+  uiexpressionElemToHtmlConf,
+  uiplayElemToHtmlConf,
+}

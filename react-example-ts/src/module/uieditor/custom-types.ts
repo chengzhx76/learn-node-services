@@ -8,9 +8,15 @@ export type Expression = {
   value: string,
 }
 
-export type UiEditorElement = {
-  type: 'uieditor'
+export type UiExpressionElement = {
+  type: 'uiexpression'
   role: string
   list: Expression[]
+  children: EmptyText[]
+}
+
+export type UiPlayElement = {
+  type: 'uiplay'
+  line: string
   children: EmptyText[]
 }
