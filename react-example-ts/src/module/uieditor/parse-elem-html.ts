@@ -38,7 +38,8 @@ function uiplayParseHtml(
 
 
 const uiexpressionParseHtmlConf = {
-  selector: 'span[data-w-e-type="uiexpression"]',
+  // selector: 'span[data-w-e-type="uiexpression"]',
+  selector: 'select[data-w-e-type="uiexpression"]',
   parseElemHtml: uiexpressionParseHtml,
 }
 

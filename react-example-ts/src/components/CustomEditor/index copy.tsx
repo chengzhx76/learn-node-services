@@ -222,7 +222,6 @@ function CustomEditor() {
       }, 100);
       setTimeout(() => {
         renderExpression(editor, list, i);
-        renderPlay(editor, i);
         /* setTimeout(() => {
           renderText(editor, text, i);
         }, 1000); */
@@ -290,17 +289,6 @@ function CustomEditor() {
         }); */
       }
     }
-  }
-  function renderPlay(editor: IDomEditor, i: number) {
-    const playNode: UiPlayElement = {
-      type: "uiplay",
-      line: "",
-      children: [{ text: "" }],
-    };
-    // console.log("sdsadasdasd", editor.selection?.anchor.path);
-    // editor.insertNode(expressionNode);
-
-    SlateTransforms.insertNodes(editor, playNode, { at: [i, 0] });
   }
 
   // 编辑器配置

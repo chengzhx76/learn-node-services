@@ -4,10 +4,23 @@
  */
 
 import { h, VNode, VNodeChildren } from 'snabbdom'
-import { DomEditor, IDomEditor, SlateElement } from '@wangeditor/editor'
+import { DomEditor, IDomEditor, SlateElement, SlateTransforms } from '@wangeditor/editor'
 import { UiExpressionElement, UiPlayElement } from './custom-types'
 
 function renderUiExpression(elem: SlateElement, children: VNode[] | null, editor: IDomEditor): VNode {
+
+  const path = DomEditor.findPath(editor, elem); 
+  // console.log('renderUiExpression==> ', path);
+
+  
+  function updateSelect(event:any) {
+    /* console.log('Selected value:', event.target.value);
+    const p = { type: 'paragraph', children: [{ text: event.target.value }] };
+      const insertPath = [path[0]];
+      SlateTransforms.insertNodes(editor, p, {
+        at: insertPath // 在 link-card 后面插入
+      }); */
+  }
   // 构建 vnode
   const { role = '', list = [] } = elem as UiExpressionElement
 
@@ -15,7 +28,9 @@ function renderUiExpression(elem: SlateElement, children: VNode[] | null, editor
   for (let i = 0; i < list.length; i++) {
     const option = h(
       'option',
-      { props: { value: list[i].value } },
+      {
+        props: { value: list[i].value },
+      },
       list[i].label
     )
     options.push(option)
@@ -48,6 +63,9 @@ function renderUiExpression(elem: SlateElement, children: VNode[] | null, editor
     {
       props: {
         contentEditable: false, // 不可编辑
+      },
+      on: {
+        change: updateSelect
       },
       style: {
         marginLeft: '3px',

@@ -1,4 +1,5 @@
-import { IDomEditor, DomEditor, SlateTransforms, SlateEditor, SlateRange } from '@wangeditor/editor'
+import { IDomEditor, DomEditor, SlateTransforms, SlateEditor, SlateRange, SlateNode, SlateElement } from '@wangeditor/editor'
+import { Location } from 'slate'
 import { IExtendConfig } from './interface'
 
 function getUiEditorConfig(editor: IDomEditor) {
@@ -39,7 +40,7 @@ function withUiEditor<T extends IDomEditor>(editor: T): T {   // TS 语法
     });
 
     for (const [node, path] of blockEntries) {
-      console.log("SlateEditor.nodes.uiexpression===> ", node, path);
+      // console.log("SlateEditor.nodes.uiexpression===> ", node, path);
     }
     /* const blockEntry = SlateEditor.above(editor, {
       match: (n: any) => SlateEditor.isBlock(editor, n),
@@ -63,31 +64,181 @@ function withUiEditor<T extends IDomEditor>(editor: T): T {   // TS 语法
     console.log('insertNode.type===> ', type);
     return insertNode(node);
   }
-
-
   
   newEditor.deleteBackward = (unit) => { 
-    console.log('deleteBackward.uiexpressionNode===> ', unit);
     const { selection } = editor;
+    // console.log('deleteBackward.uiexpressionNode===> ', unit);
+    if (!selection) {
+      deleteBackward(unit);
+      return
+    }
+    const _node = SlateNode.get(editor, selection.anchor.path);
+    if (_node) {
+      // const text = SlateNode.string(_node);
+      // console.log('deleteBackward.befor.text===> ', text);
+      /* const blockEntries = SlateEditor.nodes(editor);
+      console.log('deleteBackward.blockEntries===> ', blockEntries);
+      console.log('deleteBackward.editor.children===> ', editor.children); */
+      
+    }
+
+
+    /* const firstParagraph = SlateNode.get(editor, [0]);
+    const inlineNode1 = SlateNode.get(editor, [0, 1]);
+    const inlineNode2 = SlateNode.get(editor, [0, 3]);
+    // const inlineChildren = SlateNode.children(editor, [0, 1]);
+    const type1 = DomEditor.getNodeType(inlineNode1);
+    const type2 = DomEditor.getNodeType(inlineNode2);
+    console.log("inlineNode.type1==>", type1);
+    console.log("inlineNode.type2==>", type2);
+    console.log('firstParagraph:', firstParagraph);
+    console.log('inlineNode:', inlineNode1); */
+    // console.log('inlineChildren:', Array.from(inlineChildren));
+
+
+    // SlateTransforms.deselect(editor); // 确保没有选中内容
+
+    deleteBackward(unit);
+    const node = SlateNode.get(editor, selection.anchor.path);
+    if (node) {
+      const text = SlateNode.string(node);
+      console.log('deleteBackward.after.text===> ', text);
+      if (text && !(text.includes(':') || text.includes('：'))) {
+        SlateTransforms.deselect(editor); // 确保没有选中内容
+        removeNode('uiexpression', newEditor)
+        removeNode('uiplay', newEditor)
+        SlateTransforms.select(editor, selection); // 恢复之前的选区
+      }
+    }
+
+    
+    /* let uiplayPath:Location = [0, 0]
+    // SlateTransforms.removeNodes(newEditor, { at: [0, 3] });
+    for (const [node, path] of SlateNode.descendants(editor, { from: [0] })) {
+      const type = DomEditor.getNodeType(node);
+      if (type === 'uiplay' || type === 'uiexpression') {
+        console.log("descendants.type==>", type, path);
+        console.log("descendants.path==>", [path[0], path[1]]);
+        uiplayPath = path
+        // SlateTransforms.removeNodes(newEditor, { at: [0, 3] });
+        // SlateTransforms.removeNodes(newEditor, { at: path });
+        // SlateTransforms.delete(editor, { at: [path[0], path[1]] })
+        
+      }
+    }
+    SlateTransforms.removeNodes(newEditor, { at: uiplayPath }); */
+
+
+    // SlateTransforms.select(editor, selection); // 恢复之前的选区
+
+    /* const nodeEntries = SlateEditor.nodes(editor, {
+      match: (node: SlateNode) => {
+      if (SlateElement.isElement(node)) {
+        const type = DomEditor.getNodeType(node)
+        console.log('nodeEntries.type==>', type);
+          if (type === 'paragraph') {
+            return true // 匹配 paragraph
+          }
+        }
+        return false
+      },
+      universal: true,
+    })
+
+    if (nodeEntries == null) {
+      console.log('当前未选中的 paragraph')
+    } else {
+      for (let nodeEntry of nodeEntries) {
+        const [node, path] = nodeEntry
+        console.log('选中了 paragraph 节点', node)
+        console.log('节点 path 是', path)
+      }
+    } */
+
+    /* const childrens = SlateNode.children(editor, selection.anchor.path);
+    console.log('deleteBackward.editor.childrens===> ', childrens);  */
+    
+    
+    /* const nodeEntries = SlateEditor.nodes(editor, {
+      match: (node) => {
+        if (SlateElement.isElement(node)) {
+          return DomEditor.getNodeType(node) === 'uiexpression'; // 匹配 paragraph
+        }
+        return false;
+      },
+      universal: true,
+    });
+    console.log('deleteBackward.befor.nodeEntries===> ', nodeEntries); */
+
+    // const node = DomEditor.getSelectedTextNode(newEditor);
+    // console.log('deleteBackward.node===> ', node);
+    
+
     // SlateTransforms.delete(newEditor, { at: selection?.anchor.path[0] - 1 });
-    if (editor.selection && SlateRange.isCollapsed(editor.selection)) {
+    /* if (selection && SlateRange.isCollapsed(selection)) {
       const parentBlockEntry = SlateEditor.above(editor, {
         match: n => SlateEditor.isBlock(editor, n),
-        at: editor.selection,
+        at: selection,
       })
+      
+      console.log('parentBlockEntry===> ', parentBlockEntry);
 
       if (parentBlockEntry) {
         const [, parentBlockPath] = parentBlockEntry
-        const parentElementRange = SlateEditor.range(editor, parentBlockPath, editor.selection.anchor)
+        console.log('parentBlockPath===> ', parentBlockPath, selection.anchor);
+        const parentElementRange = SlateEditor.range(editor, parentBlockPath, selection.anchor)
 
         const currentLineRange = findCurrentLineRange(newEditor, parentElementRange)
 
+        console.log('currentLineRange===> ', currentLineRange);
+
         if (!SlateRange.isCollapsed(currentLineRange)) {
-          SlateTransforms.delete(editor, { at: currentLineRange })
+          // SlateTransforms.delete(editor, { at: currentLineRange })
         }
       }
-    }
-    deleteBackward(unit);
+    } */
+    /* SlateTransforms.select(editor, {
+      anchor: { path:[0,1], offset: 0 },
+      focus: { path:[0,1], offset: 2 },
+    }) */
+
+    // console.log('deleteBackward.selection.anchor.path===> ', selection.anchor.path);
+
+    // SlateTransforms.delete(editor, { at: { path: selection.anchor.path, offset: 0 } })
+    /* SlateTransforms.removeNodes(editor, {
+      at: { path: selection.anchor.path, offset: 0 },
+      match: n => DomEditor.checkNodeType(n, 'uiplay'),
+    }) */
+
+    /* const blockEntries = SlateEditor.nodes(editor, {
+      match: n => {
+        return DomEditor.getNodeType(n) === 'uiexpression';
+      },
+    }); */
+
+    /* SlateTransforms.removeNodes(editor, {
+      at: selection.anchor.path,
+      match: n => {
+        return DomEditor.getNodeType(n) === 'uiexpression';
+      },
+      mode: 'lowest',
+      voids: true,
+    }); */
+
+    /* const node = SlateNode.get(editor, selection.anchor.path);
+    if (node) {
+      const text = SlateNode.string(node);
+      console.log('deleteBackward.after.text===> ', text);
+    } */
+
+    /* SlateTransforms.removeNodes(editor, {
+      at: selection.anchor.path,
+      match: n => {
+        return DomEditor.getNodeType(n) === 'uiexpression';
+      },
+    }); */ //删除节点
+    // editor.restoreSelection(); // 恢复选区
+    
   }
 
  // 重写 isInline
@@ -111,6 +262,25 @@ function withUiEditor<T extends IDomEditor>(editor: T): T {   // TS 语法
 
 
   return editor
+}
+
+const removeNode = (nodeType: string, editor: IDomEditor) => {
+  let removePath:Location = []
+  for (const [node, path] of SlateNode.descendants(editor, { from: [0] })) {
+      const type = DomEditor.getNodeType(node);
+      if (type === nodeType) {
+        removePath = path
+        // console.log("descendants.type==>", type, path);
+        // console.log("descendants.path==>", [path[0], path[1]]);
+        // SlateTransforms.removeNodes(newEditor, { at: [0, 3] });
+        // SlateTransforms.removeNodes(newEditor, { at: path });
+        // SlateTransforms.delete(editor, { at: [path[0], path[1]] })
+        
+      }
+  }
+  if (removePath.length > 0) {
+    SlateTransforms.removeNodes(editor, { at: removePath });
+  }
 }
 
 const findCurrentLineRange = (editor: IDomEditor, parentRange: SlateRange): SlateRange => {
@@ -142,16 +312,15 @@ const findCurrentLineRange = (editor: IDomEditor, parentRange: SlateRange): Slat
   return SlateEditor.range(editor, positions[right], parentRangeBoundary)
 }
 
-
-const doRectsIntersect = (rect: DOMRect, compareRect: DOMRect) => {
-  const middle = (compareRect.top + compareRect.bottom) / 2
-  return rect.top <= middle && rect.bottom >= middle
-}
-
 const areRangesSameLine = (editor: IDomEditor, range1: SlateRange, range2: SlateRange) => {
   const rect1 = DomEditor.toDOMRange(editor, range1).getBoundingClientRect()
   const rect2 = DomEditor.toDOMRange(editor, range2).getBoundingClientRect()
   return doRectsIntersect(rect1, rect2) && doRectsIntersect(rect2, rect1)
+}
+
+const doRectsIntersect = (rect: DOMRect, compareRect: DOMRect) => {
+  const middle = (compareRect.top + compareRect.bottom) / 2
+  return rect.top <= middle && rect.bottom >= middle
 }
 
 export default withUiEditor
