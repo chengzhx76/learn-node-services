@@ -8,6 +8,15 @@ function getUiEditorConfig(editor: IDomEditor) {
   return uiEditotConfig
 }
 
+const lineMap = new Map<number, string>()
+
+// const colons = [':', '：']
+const commkeys = ['旁白:', '旁白：', '黑屏文字:', '黑屏文字：']
+
+function containColon(text:string) {
+  return text.indexOf(':') !== -1 || text.indexOf('：') !== -1
+}
+
 function withUiEditor<T extends IDomEditor>(editor: T): T {   // TS 语法
 
   const { insertText, isInline, isVoid, normalizeNode, insertBreak, insertNode, deleteBackward } = editor
@@ -99,15 +108,36 @@ function withUiEditor<T extends IDomEditor>(editor: T): T {   // TS 语法
     // SlateTransforms.deselect(editor); // 确保没有选中内容
 
     deleteBackward(unit);
-    const node = SlateNode.get(editor, selection.anchor.path);
-    if (node) {
-      const text = SlateNode.string(node);
-      console.log('deleteBackward.after.text===> ', text);
-      if (text && !(text.includes(':') || text.includes('：'))) {
-        SlateTransforms.deselect(editor); // 确保没有选中内容
-        removeNode('uiexpression', newEditor)
-        removeNode('uiplay', newEditor)
-        SlateTransforms.select(editor, selection); // 恢复之前的选区
+
+    
+    const line = selection.anchor.path[0]
+    console.log('line==> ',  line);
+    if (SlateNode.has(editor, selection.anchor.path)) {
+      const node = SlateNode.get(editor, selection.anchor.path);
+      if (node) {
+        const text = SlateNode.string(node);
+        console.log('deleteBackward.after.text===> ', text);
+        // console.log('deleteBackward.after.text=bool==> ', text && !(text.includes(':') || text.includes('：')));
+  
+        if (text) {
+          const isInclude = commkeys.some(commkey => text.includes(commkey))
+          console.log('deleteBackward.after.text=isInclude==> ', isInclude);
+          if (isInclude) {
+            return
+          }
+          const preText = lineMap.get(line)
+          if (preText) {
+            // console.log('deleteBackward.containColon(preText).containColon(text)===> ', preText, containColon(preText), text, containColon(text));
+            if (containColon(preText) && !containColon(text)) {
+              // console.log('deleteBackward.已删除全部冒号===> ', preText, text);
+              SlateTransforms.deselect(editor); // 确保没有选中内容
+              removeNode('uiexpression', newEditor)
+              removeNode('uiplay', newEditor)
+              SlateTransforms.select(editor, selection); // 恢复之前的选区
+            }
+          }
+          lineMap.set(line, text)
+        }
       }
     }
 
@@ -265,9 +295,14 @@ function withUiEditor<T extends IDomEditor>(editor: T): T {   // TS 语法
 }
 
 const removeNode = (nodeType: string, editor: IDomEditor) => {
-  let removePath:Location = []
-  for (const [node, path] of SlateNode.descendants(editor, { from: [0] })) {
+  let removePath: Location = []
+  let line = 0
+  if (editor && editor.selection) {
+    line = editor.selection.anchor.path[0]
+  }
+  for (const [node, path] of SlateNode.descendants(editor, { from: [line] })) {
       const type = DomEditor.getNodeType(node);
+      console.log('==removeNode.type===> ', type);
       if (type === nodeType) {
         removePath = path
         // console.log("descendants.type==>", type, path);

@@ -11,6 +11,7 @@ export type Expression = {
 export type UiExpressionElement = {
   type: 'uiexpression'
   role: string
+  selected: string
   list: Expression[]
   children: EmptyText[]
 }

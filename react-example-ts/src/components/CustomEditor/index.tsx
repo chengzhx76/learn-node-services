@@ -28,12 +28,12 @@ const roles = new Map<string, string[]>([
 
 const list = [
   {
-    label: "默认",
+    label: "愤怒",
     role: "山音麦",
     desc: "我在哪儿，一觉醒来已然不知往事。",
   },
   {
-    label: "欢喜",
+    label: "战斗",
     role: "功夫小子",
     desc: "好像进入幻境一般，这应该不是真相，咱们快逃离梦境吧；",
   },
@@ -48,7 +48,7 @@ const list = [
     desc: "一段黑屏文字；",
   },
   {
-    label: "愤怒",
+    label: "挑眉",
     role: "牛大力",
     desc: "你们的法力已消失，走不掉的！",
   },
@@ -65,6 +65,7 @@ function addExpression(editor: IDomEditor) {
   const expressionNode: UiExpressionElement = {
     type: "uiexpression",
     role: "Role-he",
+    selected: "",
     list: [
       {
         label: "哈哈",
@@ -268,6 +269,7 @@ function CustomEditor() {
         const expressionNode: UiExpressionElement = {
           type: "uiexpression",
           role: role,
+          selected: label,
           list: exs,
           children: [{ text: "" }],
         };
@@ -318,6 +320,7 @@ function CustomEditor() {
     const expressionNode: UiExpressionElement = {
       type: "uiexpression",
       role: "Role-he",
+      selected: "",
       list: [
         {
           label: "哈哈",
@@ -337,6 +340,24 @@ function CustomEditor() {
       // editor.insertNode(expressionNode); // 插入 mention
       // DomEditor.findPath(editor, elem.children[0]);
       // SlateTransforms.insertNodes(editor, expressionNode, { at: [0, 0] });
+    }
+  }
+
+  function addAside() {
+    const p = { type: "paragraph", children: [{ text: "旁白:" }] };
+    if (editor) {
+      SlateTransforms.insertNodes(editor, p, {
+        mode: "highest",
+      });
+    }
+  }
+
+  function addTell() {
+    const p = { type: "paragraph", children: [{ text: "黑屏文字:" }] };
+    if (editor) {
+      SlateTransforms.insertNodes(editor, p, {
+        mode: "highest",
+      });
     }
   }
 
@@ -381,7 +402,9 @@ function CustomEditor() {
       </div>
       <div style={{ marginTop: "15px" }}>{html}</div>
       <button onClick={insertUiExpression}>insertUiExpression</button>
-      <button onClick={renderScenes}>renderScenes</button>
+      <button onClick={renderScenes}>渲染场景</button>
+      <button onClick={addAside}>插入旁白</button>
+      <button onClick={addTell}>插入黑屏文字</button>
     </>
   );
 }

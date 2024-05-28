@@ -1,0 +1,50 @@
+span.command-panel {
+  margin-left: 1px;
+  margin-right: 3px;
+  padding: 0 3px;
+  display: inline-block;
+  position: relative;
+}
+
+span.show-panel {
+  background-color: #686D76;
+  border-radius: 3px;
+  padding: 2px 5px;
+  font-size: 18px;
+  font-weight: bold;
+  color: #fff;
+  cursor: pointer;
+  position: absolute;
+  left: -40px;
+  top: -20px;
+}
+
+ul.commands {
+  position: absolute;
+  left: -170px;
+  z-index: 9999;
+  top: -20px;
+  width: 120px;
+  padding: 6px 0;
+  padding-left: 10px;
+  background: #808836;
+  border-radius: 6px;
+}
+ul.commands li {
+  list-style: none;
+  font-size: 16px;
+  padding: 5px 0;
+  color: #fff;
+  cursor: pointer;
+}
+
+.hide {
+  display: none;
+}
+.show {
+  display: inline-block;
+}
+
+.w-e-scroll {
+  overflow-y: visible !important;
+}

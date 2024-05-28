@@ -22,42 +22,25 @@ function renderUiExpression(elem: SlateElement, children: VNode[] | null, editor
       }); */
   }
   // 构建 vnode
-  const { role = '', list = [] } = elem as UiExpressionElement
+  const { role = '', selected = '', list = [] } = elem as UiExpressionElement
 
   const options: VNodeChildren = []
   for (let i = 0; i < list.length; i++) {
     const option = h(
       'option',
       {
-        props: { value: list[i].value },
+        /* props: {
+          value: list[i].value,
+        }, */
+        attrs: {
+          value: list[i].value,
+          selected: list[i].value === selected
+        }
       },
       list[i].label
     )
     options.push(option)
   }
-
-  /* const vselectNode = h(
-    'span',
-    {
-      props: {
-        contentEditable: false, // 不可编辑
-      },
-      style: {
-        marginLeft: '3px',
-        marginRight: '3px',
-        backgroundColor: 'var(--w-e-textarea-slight-bg-color)',
-        borderRadius: '3px',
-        padding: '0 3px',
-      },
-    },
-    [
-      h(
-        'select',
-        {},
-        options
-      )
-    ]
-  ) */
   const vselectNode = h(
     'select',
     {

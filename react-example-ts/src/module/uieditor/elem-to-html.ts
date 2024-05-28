@@ -16,15 +16,16 @@ import { UiExpressionElement, UiPlayElement } from './custom-types'
 */
 // 生成 html 的函数
 function uieexpressionToHtml(elem: SlateElement, childrenHtml: string): string {
-  const { role = '', list = [] } = elem as UiExpressionElement
-  const listStr = encodeURIComponent(JSON.stringify(list))
+  const { role = '', selected = '', list = [] } = elem as UiExpressionElement
   let option = ''
   for (let i = 0; i < list.length; i++) {
     const { value, label } = list[i]
-    option = option + `<option value="${value}">${label}</option>`
+    let isSelected = value === selected
+    option = option + `<option value="${value}" ${isSelected?? 'selected'}>${label}</option>`
   }
+  const listStr = encodeURIComponent(JSON.stringify(list))
   // const html = `<span data-w-e-type="uiexpression" data-list="${listStr}" data-w-e-is-void data-w-e-is-inline"><select>${option}</select></span>`
-  const html = `<select data-w-e-type="uiexpression" data-list="${listStr}" data-w-e-is-void data-w-e-is-inline">${option}</select>`
+  const html = `<select data-w-e-type="uiexpression" data-list="${listStr}" data-w-e-is-void data-w-e-is-inline>${option}</select>`
   return html
 }
 

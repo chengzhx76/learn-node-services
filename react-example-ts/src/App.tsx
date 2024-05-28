@@ -1,14 +1,16 @@
 // import React from 'react';
 // import logo from './logo.svg';
-import './App.css';
+import "./App.css";
 
 // import WebSocket from './components/WebSocket'
-import CustomEditor from './components/CustomEditor'
+import CustomEditor from "./components/CustomEditor";
+import CustomTextEditor from "./components/CustomTextEditor";
 
 function App() {
   return (
     <>
-      <CustomEditor />
+      {/* <CustomEditor /> */}
+      <CustomTextEditor />
     </>
   );
 }
