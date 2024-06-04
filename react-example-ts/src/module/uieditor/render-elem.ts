@@ -14,38 +14,56 @@ function renderUiExpression(elem: SlateElement, children: VNode[] | null, editor
 
   
   function updateSelect(event:any) {
-    /* console.log('Selected value:', event.target.value);
-    const p = { type: 'paragraph', children: [{ text: event.target.value }] };
+    console.log('Selected value:', event.target.value, path[0]);
+    // console.log('Selected valueelem:', elem);
+    // console.log('Selected valuechildren:', children);
+    // elem.list = event.srcElement.value;
+    // console.log('Selected value:', event.target.value);
+    /* const p = { type: 'paragraph', children: [{ text: event.target.value }] };
       const insertPath = [path[0]];
       SlateTransforms.insertNodes(editor, p, {
         at: insertPath // 在 link-card 后面插入
       }); */
+    /* const selectDom = event.srcElement;
+    if (selectDom) {
+      selectDom.options[0].attrs = "selected";
+      for (let option of selectDom.options) {
+        if (option.value === event.target.value) {
+          option.selected = true;
+        } else {
+          option.selected = false;
+        }
+      }
+    } */
+    
   }
   // 构建 vnode
   const { role = '', selected = '', list = [] } = elem as UiExpressionElement
-
   const options: VNodeChildren = []
   for (let i = 0; i < list.length; i++) {
-    const option = h(
+    let attrs = {}
+    if (list[i].value === selected) {
+      attrs = {
+        selected: true
+      }
+    }
+    let option = h(
       'option',
       {
-        /* props: {
+        props: {
           value: list[i].value,
-        }, */
-        attrs: {
-          value: list[i].value,
-          selected: list[i].value === selected
-        }
+        },
+        attrs: attrs
       },
       list[i].label
     )
     options.push(option)
   }
   const vselectNode = h(
-    'select',
+    'select.id_'+path[0],
     {
       props: {
-        contentEditable: false, // 不可编辑
+        // contentEditable: false, // 不可编辑
       },
       on: {
         change: updateSelect
@@ -69,7 +87,7 @@ function renderUiPlay(elem: SlateElement, children: VNode[] | null, editor: IDom
   const { line } = elem as UiPlayElement
 
   const vselectNode = h(
-    'span.ui-play',
+    'strong.ui-play',
     {
       props: {
         contentEditable: false, // 不可编辑

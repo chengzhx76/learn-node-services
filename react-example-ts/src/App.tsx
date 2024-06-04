@@ -3,14 +3,16 @@
 import "./App.css";
 
 // import WebSocket from './components/WebSocket'
-import CustomEditor from "./components/CustomEditor";
-import CustomTextEditor from "./components/CustomTextEditor";
+// import CustomEditor from "./components/CustomEditor";
+// import CustomTextEditor from "./components/CustomTextEditor";
+import CustomCommandEditor from "./components/CustomCommandEditor";
 
 function App() {
   return (
     <>
+      <CustomCommandEditor />
       {/* <CustomEditor /> */}
-      <CustomTextEditor />
+      {/* <CustomTextEditor /> */}
     </>
   );
 }

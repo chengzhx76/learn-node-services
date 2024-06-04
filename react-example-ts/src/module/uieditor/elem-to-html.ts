@@ -21,7 +21,12 @@ function uieexpressionToHtml(elem: SlateElement, childrenHtml: string): string {
   for (let i = 0; i < list.length; i++) {
     const { value, label } = list[i]
     let isSelected = value === selected
-    option = option + `<option value="${value}" ${isSelected?? 'selected'}>${label}</option>`
+    if (isSelected) {
+      // option = option + `<option value="${value}" ${isSelected?? 'selected'}>${label}</option>`
+      option = option + `<option value="${value}" selected>${label}</option>`
+    } else {
+      option = option + `<option value="${value}">${label}</option>`
+    }
   }
   const listStr = encodeURIComponent(JSON.stringify(list))
   // const html = `<span data-w-e-type="uiexpression" data-list="${listStr}" data-w-e-is-void data-w-e-is-inline"><select>${option}</select></span>`

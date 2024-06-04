@@ -14,7 +14,7 @@ function withUiEditor<T extends IDomEditor>(editor: T): T {   // TS 语法
   const { isInline, isVoid, insertBreak, selection } = editor
   const newEditor = editor
 
-function insertTextCommand() {
+  function insertTextCommand() {
     const commandNode: TextCommandElement = {
       type: "textcommand",
       list: [
@@ -44,8 +44,6 @@ function insertTextCommand() {
   }
 
   newEditor.insertBreak = () => { 
-    const uiexpressionNode = DomEditor.getSelectedTextNode(newEditor);
-    console.log('insertBreak.uiexpressionNode===> ', uiexpressionNode);
     insertBreak();
     setTimeout(() => { 
       insertTextCommand()
@@ -54,7 +52,7 @@ function insertTextCommand() {
 
   newEditor.isInline = elem => {
     const type = DomEditor.getNodeType(elem)
-    if (type === 'textcommand') {
+    if (type === 'textcommand' || type === 'textlabel') {
       return true
     }
     return isInline(elem)
@@ -62,7 +60,7 @@ function insertTextCommand() {
 
   newEditor.isVoid = elem => {
     const type = DomEditor.getNodeType(elem)
-    if (type === 'textcommand') {
+    if (type === 'textcommand' || type === 'textlabel') {
       return true
     }
     return isVoid(elem)

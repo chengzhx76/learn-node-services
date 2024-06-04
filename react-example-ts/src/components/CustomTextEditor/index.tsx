@@ -8,6 +8,7 @@ import {
   IEditorConfig,
   Boot,
   SlateTransforms,
+  SlateEditor,
 } from "@wangeditor/editor";
 
 import texteditorModule, { TextCommandElement } from "../../module/texteditor";
@@ -81,9 +82,31 @@ function CustomTextEditor() {
       /* SlateTransforms.insertNodes(editor, commandNode, {
         at: editor.selection?.anchor.path,
       }); */
-      SlateTransforms.insertNodes(editorRef.current, commandNode, {
-        at: [0, 0],
+      SlateTransforms.insertNodes(editorRef.current, commandNode);
+
+      /* SlateTransforms.move(editorRef.current, {
+        distance: 3,
+        unit: "word",
+        reverse: true,
+      }); */
+
+      /* const block = SlateEditor.above(editorRef.current, {
+        match: (n) => SlateEditor.isBlock(editorRef.current, n),
       });
+
+      if (!block) return;
+
+      const [, blockPath] = block; */
+
+      /* const endBlockPath = SlateEditor.end(
+        editorRef.current,
+        editor.selection?.anchor.path
+      );
+      SlateTransforms.select(editorRef.current, endBlockPath); */
+
+      const end = SlateEditor.end(editorRef.current, []);
+      // SlateTransforms.select(editorRef.current, end);
+      editorRef.current.select(end);
     }
   }
 

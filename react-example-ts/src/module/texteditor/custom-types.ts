@@ -8,6 +8,12 @@ export type Command = {
   command: string
 }
 
+export type TextLabelElement = {
+  type: 'textlabel'
+  value: string
+  children: EmptyText[]
+}
+
 export type TextCommandElement = {
   type: 'textcommand'
   list: Command[]

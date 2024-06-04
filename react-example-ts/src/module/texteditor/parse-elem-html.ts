@@ -5,13 +5,9 @@
 
 import { DOMElement } from '../utils/dom'
 import { IDomEditor, SlateDescendant, SlateElement } from '@wangeditor/editor'
-import { TextCommandElement, Command } from './custom-types'
+import { TextCommandElement, Command, TextLabelElement } from './custom-types'
 
-function textcommandParseHtml(
-  elem: DOMElement,
-  children: SlateDescendant[],
-  editor: IDomEditor
-): SlateElement {
+function textcommandParseHtml(elem: DOMElement, children: SlateDescendant[], editor: IDomEditor): SlateElement {
   const listStr = elem.getAttribute('data-list') || ''
   const list: Command[] = JSON.parse(decodeURIComponent(listStr)) as Command[]
   return {
@@ -22,10 +18,25 @@ function textcommandParseHtml(
 }
 
 const textcommandParseHtmlConf = {
-  selector: 'div[data-w-e-type="textcommand"]',
+  selector: 'span[data-w-e-type="textcommand"]',
+  parseElemHtml: textcommandParseHtml,
+}
+
+function textlabelParseHtml(elem: DOMElement, children: SlateDescendant[], editor: IDomEditor): SlateElement {
+  const value = elem.getAttribute('data-label') || ''
+  return {
+    type: 'textlabel',
+    value,
+    children: [{ text: '' }], // void node 必须有一个空白 text
+  } as TextLabelElement
+}
+
+const textlabelParseHtmlConf = {
+  selector: 'span[data-w-e-type="textlabel"]',
   parseElemHtml: textcommandParseHtml,
 }
 
 export {
   textcommandParseHtmlConf,
+  textlabelParseHtmlConf,
 }

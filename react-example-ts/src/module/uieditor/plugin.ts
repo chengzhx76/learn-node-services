@@ -61,11 +61,11 @@ function withUiEditor<T extends IDomEditor>(editor: T): T {   // TS 语法
   }
 
 
-  newEditor.insertBreak = () => { 
+  /* newEditor.insertBreak = () => { 
     const uiexpressionNode = DomEditor.getSelectedTextNode(newEditor);
     console.log('insertBreak.uiexpressionNode===> ', uiexpressionNode);
     insertBreak();
-  }
+  } */
 
   newEditor.insertNode = (node) => {
     const type = DomEditor.getNodeType(node)

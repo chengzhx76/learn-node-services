@@ -21,12 +21,19 @@ import uieditorModule, {
 Boot.registerModule(uieditorModule);
 
 const roles = new Map<string, string[]>([
+  ["哈哈", ["默认", "哈1", "哈2"]],
+  ["呵呵", ["默认", "呵1", "呵2"]],
   ["山音麦", ["默认", "欢喜", "愤怒"]],
   ["功夫小子", ["默认", "战斗", "挑衅", "胜利", "失败"]],
   ["牛大力", ["默认", "大笑", "挑衅", "挑眉", "沮丧"]],
 ]);
 
 const list = [
+  {
+    label: "哈2",
+    role: "哈哈",
+    desc: "我在哪儿，一觉醒来已然不知往事。",
+  },
   {
     label: "愤怒",
     role: "山音麦",
@@ -53,6 +60,58 @@ const list = [
     desc: "你们的法力已消失，走不掉的！",
   },
 ];
+
+function getNodesText(nodes: NodeListOf<ChildNode>, texts: string[] = []) {
+  for (let i = 0; i < nodes.length; i++) {
+    const node = nodes[i];
+    if (
+      node.nodeType === Node.TEXT_NODE &&
+      node.parentElement &&
+      node.parentElement.tagName.toLowerCase() === "span"
+    ) {
+      const content = node.textContent?.trim();
+      if (content) {
+        console.log(
+          "node.nodeName====> ",
+          node.nodeName,
+          node.nodeValue,
+          content
+        );
+        texts.push(content);
+      }
+    } else if (node.nodeType === Node.ELEMENT_NODE) {
+      getNodesText(node.childNodes, texts);
+    }
+    // console.log("==getNodesText=>");
+  }
+  return texts.join("");
+}
+
+function getHtmlText() {
+  const lineDoms = document.querySelectorAll("div.w-e-text-container p");
+  const scenes = [];
+  for (let i = 0; i < lineDoms.length; i++) {
+    const lineDom = lineDoms[i];
+    const selectDom = lineDom.querySelector("select");
+    let expression = "";
+    if (selectDom) {
+      expression = selectDom.value;
+    }
+    let text = getNodesText(lineDom.childNodes);
+    scenes.push({
+      expression,
+      text,
+    });
+  }
+  let text = "\n";
+  scenes.forEach((scene) => {
+    if (scene.text) {
+      text += `${scene.expression}|${scene.text}\n`;
+    }
+  });
+  console.log("scenes-text======> ", text);
+}
+
 function addPlay(editor: IDomEditor) {
   // console.log("====>addPlay");
 }
@@ -62,27 +121,6 @@ function addExpression(editor: IDomEditor) {
   console.log("====>addExpression");
   const { selection } = editor;
   // console.log("selection", selection);
-  const expressionNode: UiExpressionElement = {
-    type: "uiexpression",
-    role: "Role-he",
-    selected: "",
-    list: [
-      {
-        label: "哈哈",
-        value: "1",
-      },
-      {
-        label: "呵呵",
-        value: "2",
-      },
-    ],
-    children: [{ text: "" }],
-  };
-  const playNode: UiPlayElement = {
-    type: "uiplay",
-    line: "1",
-    children: [{ text: "" }],
-  };
 
   if (editor && selection) {
     editor.restoreSelection(); // 恢复选区
@@ -95,6 +133,29 @@ function addExpression(editor: IDomEditor) {
     if (text && (text.indexOf(":") > -1 || text.indexOf("：") > -1)) {
       return;
     }
+
+    const expressionNode: UiExpressionElement = {
+      type: "uiexpression",
+      role: "Role-he",
+      selected: "",
+      list: [
+        {
+          label: "哈1",
+          value: "哈1",
+        },
+        {
+          label: "呵1",
+          value: "呵1",
+        },
+      ],
+      children: [{ text: "" }],
+    };
+    const playNode: UiPlayElement = {
+      type: "uiplay",
+      line: "1",
+      children: [{ text: "" }],
+    };
+
     /* const [block] = SlateEditor.nodes(editor, {
       match: (n) => SlateEditor.isBlock(editor, n),
     // });
@@ -384,7 +445,7 @@ function CustomEditor() {
     if (_editor == null) return;
     // console.log("handleChange.getHtml()", _editor.getHtml());
 
-    // parseHtml(_editor.getHtml());
+    parseHtml(_editor.getHtml());
     setUiPlayStyle();
   };
 
@@ -405,6 +466,7 @@ function CustomEditor() {
       <button onClick={renderScenes}>渲染场景</button>
       <button onClick={addAside}>插入旁白</button>
       <button onClick={addTell}>插入黑屏文字</button>
+      <button onClick={getHtmlText}>获取内容</button>
     </>
   );
 }
@@ -419,26 +481,31 @@ function parseHtml(html: string) {
   for (let i = 0; i < lineDoms.length; i++) {
     const lineDom = lineDoms[i];
     const selectDom = lineDom.querySelector("select");
-
     let expression = "";
 
     if (selectDom) {
       expression = selectDom.value;
-      console.log("expression", expression);
+      // console.log("expression", expression);
     }
 
     const textNode = Array.from(lineDom.childNodes).find(
       (node) => node.nodeType === Node.TEXT_NODE
     );
     const text = textNode?.nodeValue;
-    console.log(`Text: ${text}`);
+    // console.log(`Text: ${text}`);
 
     scenes.push({
       expression,
       text,
     });
   }
-  console.log("scenes", scenes);
+  let text = "\n";
+  scenes.forEach((item) => {
+    if (item.text) {
+      text += `${item.expression}|${item.text}\n`;
+    }
+  });
+  console.log("scenes-text==> ", text);
 }
 
 function setUiPlayStyle() {

@@ -4,7 +4,7 @@
  */
 
 import { SlateElement } from '@wangeditor/editor'
-import { TextCommandElement } from './custom-types'
+import { TextCommandElement, TextLabelElement } from './custom-types'
 
 /*
 <ul class="commands">
@@ -26,7 +26,7 @@ function textcommandToHtml(elem: SlateElement, childrenHtml: string): string {
     lis += `<li>${label}</li>`
   }
   const listStr = encodeURIComponent(JSON.stringify(list))
-  const html = `<div class="command-panel" data-w-e-type="textcommand" data-list="${listStr}" data-w-e-is-void data-w-e-is-inline><span onClick="showCommand">+</span><ul class="commands">${lis}</ul></div>`
+  const html = `<span class="command-panel" data-w-e-type="textcommand" data-list="${listStr}" data-w-e-is-void data-w-e-is-inline><span onClick="showCommand">+</span><ul class="commands">${lis}</ul></span>`
   return html
 }
 
@@ -36,6 +36,20 @@ const textcommandElemToHtmlConf = {
   elemToHtml: textcommandToHtml,
 }
 
+// 生成 html 的函数
+function textlabelToHtml(elem: SlateElement, childrenHtml: string): string {
+  const { value = '' } = elem as TextLabelElement
+  const html = `<span data-w-e-type="textlabel" data-label="${value}" data-w-e-is-void data-w-e-is-inline>${value}</span>`
+  return html
+}
+
+// 配置
+const textlabelElemToHtmlConf = {
+  type: 'textlabel',
+  elemToHtml: textlabelToHtml,
+}
+
 export {
   textcommandElemToHtmlConf,
+  textlabelElemToHtmlConf,
 }

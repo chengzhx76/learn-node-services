@@ -4,10 +4,10 @@
  */
 
 import { h, VNode, VNodeChildren } from 'snabbdom'
-import { DomEditor, IDomEditor, SlateElement, SlateTransforms } from '@wangeditor/editor'
-import { TextCommandElement } from './custom-types'
+import { DomEditor, IDomEditor, SlateElement, SlateTransforms, SlateEditor } from '@wangeditor/editor'
+import { TextCommandElement, TextLabelElement } from './custom-types'
 
-function showCommandPanel() {
+/* function showCommandPanel() {
   const commandPanelDoms = document.querySelectorAll(".commands");
   console.log('commandPanelDoms==>', commandPanelDoms)
   if (commandPanelDoms && commandPanelDoms.length > 0) {
@@ -22,12 +22,35 @@ function showCommandPanel() {
     }
   }
 }
+ */
+
+function renderText(editor: IDomEditor, text: string, i: number) {
+  /* const p = { type: "paragraph", children: [{ text: text }] };
+  SlateTransforms.insertNodes(editor, p, {
+    at: [i],
+    // mode: "highest",
+  }); */
+  if (editor) {
+
+    const { selection } = editor;
+
+    const labelNode:TextLabelElement = {
+      type: "textlabel",
+      value: text,
+      children: [{ text: "" }],
+    };
+    // editor.restoreSelection();
+    editor.insertNode(labelNode);
+    // SlateTransforms.insertNodes(editor, labelNode, {at: [i, 2]});
+  }
+}
+
+
 
 function renderTextCommand(elem: SlateElement, children: VNode[] | null, editor: IDomEditor): VNode {
 
   const path = DomEditor.findPath(editor, elem); 
   console.log('renderTextCommand==> ', path);
-
   
   function showCommand(line:number, event?: MouseEvent) { 
     console.log('showCommand==> ', line);
@@ -40,19 +63,22 @@ function renderTextCommand(elem: SlateElement, children: VNode[] | null, editor:
       }
     }
     const commandPanelDom = commandPanelDoms[line];
-    console.log('commandPanelDom==> ', commandPanelDoms.length, commandPanelDom);
+    // console.log('commandPanelDom==> ', commandPanelDoms.length, commandPanelDom);
     if (commandPanelDom) { 
       commandPanelDom.className = "commands show";
     }
     return
   }
   function addCommand(line:number, command:string) {
-    // console.log('addCommand==> ', command);
+    console.log('addCommand==> ', line, command);
     const commandPanelDoms = document.querySelectorAll(".commands");
     const commandPanelDom = commandPanelDoms[line];
     if (commandPanelDom) {
       commandPanelDom.className = "commands hide";
     }
+
+    renderText(editor, command, line);
+
     return
   }
   // 构建 vnode
@@ -64,7 +90,7 @@ function renderTextCommand(elem: SlateElement, children: VNode[] | null, editor:
       'li',
       {
         on: {
-          click: () => addCommand(path[0], list[i].label)
+          click: () => addCommand(path[0], list[i].command)
         }
       },
       list[i].label
@@ -76,7 +102,7 @@ function renderTextCommand(elem: SlateElement, children: VNode[] | null, editor:
     'ul.commands.hide',
     {
       props: {
-        contentEditable: false, // 不可编辑
+        contentEditable: false,
       }
     },
     lis
@@ -86,10 +112,11 @@ function renderTextCommand(elem: SlateElement, children: VNode[] | null, editor:
     'span.show-panel',
     {
       props: {
-        contentEditable: false, // 不可编辑
+        contentEditable: false,
       },
       on: {
-        mouseenter: () => showCommand(path[0])
+        // mouseenter: () => showCommand(path[0])
+        click: () => showCommand(path[0])
       }
     },
     '+'
@@ -99,7 +126,7 @@ function renderTextCommand(elem: SlateElement, children: VNode[] | null, editor:
     'span.command-panel',
     {
       props: {
-        contentEditable: false, // 不可编辑
+        contentEditable: false,
       }
     },
     [vspanNode, vulNode]
@@ -109,10 +136,26 @@ function renderTextCommand(elem: SlateElement, children: VNode[] | null, editor:
 }
 
 const renderTextCommandElemConf = {
-  type: 'textcommand', // 节点 type ，重要！！！
+  type: 'textcommand',
   renderElem: renderTextCommand,
+}
+
+function renderTextLabel(elem: SlateElement, children: VNode[] | null, editor: IDomEditor): VNode { 
+  // 构建 vnode
+  const { value = [] } = elem as TextLabelElement
+  const vlabelNode = h(
+    'span.label',
+    value
+  )
+  return vlabelNode
+}
+
+const renderTextLabelElemConf = {
+  type: 'textlabel',
+  renderElem: renderTextLabel,
 }
 
 export {
   renderTextCommandElemConf,
+  renderTextLabelElemConf,
 }
