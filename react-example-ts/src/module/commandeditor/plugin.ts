@@ -1,7 +1,7 @@
-import { IDomEditor, DomEditor, SlateTransforms, SlateEditor, SlateRange, SlateNode, SlateElement } from '@wangeditor/editor'
+import { IDomEditor } from '@wangeditor/editor'
 import { IExtendConfig } from './interface'
 
-function getUiEditorConfig(editor: IDomEditor) {
+function getCommandEditorConfig(editor: IDomEditor) {
   const { EXTEND_CONF } = editor.getConfig()
   const { commandEditotConfig } = EXTEND_CONF as IExtendConfig
   return commandEditotConfig
@@ -9,14 +9,34 @@ function getUiEditorConfig(editor: IDomEditor) {
 
 function withUiEditor<T extends IDomEditor>(editor: T): T {   // TS 语法
 
-  const { isInline, isVoid, insertBreak, selection } = editor
-  const newEditor = editor
+  const { insertText, deleteBackward, insertBreak } = editor;
+  const newEditor = editor;
 
-  newEditor.insertBreak = () => { 
+  newEditor.insertText = t => {
+    insertText(t);
+    const { putEditorText } = getCommandEditorConfig(newEditor);
+    if (putEditorText) { 
+      putEditorText();
+    }
+  };
+
+  newEditor.deleteBackward = (unit) => {
+    deleteBackward(unit);
+    const { putEditorText } = getCommandEditorConfig(newEditor);
+    if (putEditorText) {
+      putEditorText();
+    }
+  };
+
+  newEditor.insertBreak = () => {
     insertBreak();
-  }
+    const { putEditorText } = getCommandEditorConfig(newEditor);
+    if (putEditorText) { 
+      putEditorText();
+    }
+  };
 
-  return editor
+  return editor;
 }
 
 export default withUiEditor

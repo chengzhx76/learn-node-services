@@ -1,5 +1,6 @@
 import "@wangeditor/editor/dist/css/style.css";
 import "./style.css";
+import "./layout.css";
 
 import React, { useState, useRef, useEffect } from "react";
 import { Editor } from "@wangeditor/editor-for-react";
@@ -8,22 +9,26 @@ import {
   IEditorConfig,
   Boot,
   SlateTransforms,
-  SlateEditor,
 } from "@wangeditor/editor";
+import type { UploadProps } from "antd";
+import { Upload } from "antd";
+
+import request from "../../util/request";
+import { debounce } from "../../util";
 
 import commandeditorModule from "../../module/commandeditor";
 Boot.registerModule(commandeditorModule);
 
-function addCommand(editor: IDomEditor) {
-  console.log("====>addCommand");
-}
+const gameName = "cheng-t";
 
 function CustomCommandEditor() {
   // editor 实例
+  const [section, setSection] = useState<string>("");
   const [editor, setEditor] = useState<IDomEditor | null>(null);
   const editorRef = useRef<IDomEditor | null>(null);
   const [html, setHtml] = useState("");
   const [show, setShow] = useState(false);
+  const [openMask, setOpenMask] = useState(false);
   const commands = [
     {
       icon: "/icon/intro.png",
@@ -62,14 +67,132 @@ function CustomCommandEditor() {
     },
   ];
 
-  // 编辑器配置
-  const editorConfig: Partial<IEditorConfig> = {
-    placeholder: "请输入内容...",
-    EXTEND_CONF: {
-      commandEditotConfig: {
-        addCommand,
-      },
+  useEffect(() => {
+    renderContent();
+    sessionStorage.setItem("__sectionName", section);
+  }, [section]);
+
+  function renderSection(sectionName: string) {
+    setSection(sectionName);
+    // sessionStorage.setItem("__sectionName", section);
+    // renderContent();
+  }
+
+  function renderContent() {
+    if (!section) {
+      return;
+    }
+    const body = {
+      gameName: gameName,
+      sectionName: section,
+      sceneType: "editor",
+    };
+
+    // setHtml("");
+    setOpenMask(true);
+    request.post("/api/editor/sceneDetail", body).then((resp: any) => {
+      const list = resp.data.data;
+      if (list && editorRef.current) {
+        editorRef.current.restoreSelection();
+        editorRef.current.clear();
+
+        let html = "";
+        for (const line of list) {
+          html += `<p>${line.desc}</p>`;
+        }
+        // console.log("=====html===>", html);
+        if (html) {
+          /* editorRef.current?. */ setHtml(html);
+        }
+        /* setTimeout(() => {
+          if (editorRef.current) {
+            const end = SlateEditor.end(editorRef.current, []);
+            SlateTransforms.select(editorRef.current, end);
+          }
+        }, 100); */
+        setOpenMask(false);
+      }
+    });
+  }
+
+  const uploadText: UploadProps = {
+    name: "file",
+    action: "/api/editor/editTxtScene/upload",
+    accept: "txt, text/plain",
+    data: {
+      gameName: gameName,
+      sectionName: section,
     },
+    headers: {
+      Authorization: `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI2NjRjMDYzMGJhOGU4ZDI1MDJhZjUwMDEiLCJ1c2VybmFtZSI6ImNoZW5nZ2MiLCJpYXQiOjE3MTgwOTkyMjQsImV4cCI6MTcxODE4NTYyNH0.eRW9lhYDXgxpJosjPUgV2-NqkLtvvp8ebF3bypWa8Dw`,
+    },
+    showUploadList: false,
+    onChange(info) {
+      setOpenMask(true);
+      if (info.file.status === "done") {
+        if (editorRef.current) {
+          const list = info.file.response.data;
+          if (list && list.length === 0) {
+            return;
+          }
+          editorRef.current.restoreSelection();
+          editorRef.current.clear();
+          let html = "";
+          for (const line of list) {
+            html += `<p>${line.desc}</p>`;
+          }
+          if (html) {
+            /* editorRef.current?. */ setHtml(html);
+          }
+
+          /* editorRef.current.restoreSelection();
+          editorRef.current.setHtml("");
+          let html = "";
+          for (const line of list) {
+            // renderText(editorRef.current, list[i].desc, i);
+            html += `<p>${line.desc}</p>\n`;
+          }
+          editorRef.current.setHtml(html); */
+          setOpenMask(false);
+        }
+      }
+    },
+  };
+
+  const putEditorText = debounce(() => {
+    const sectionName = sessionStorage.getItem("__sectionName");
+    const body = {
+      gameName: gameName,
+      sectionName: sectionName,
+      text: editorRef.current?.getText(),
+    };
+    request.post("/api/editor/editTxtScene", body).then((resp: any) => {
+      // console.log('===保存场景内容==>', resp.data.data);
+    });
+  }, 800);
+
+  const undoText = () => {
+    if (editor != null && editor.undo) {
+      editor.undo();
+      setTimeout(() => {
+        putEditorText();
+      }, 200);
+    }
+  };
+
+  const redoText = () => {
+    if (editor != null && editor.redo) {
+      editor.redo();
+      setTimeout(() => {
+        putEditorText();
+      }, 200);
+    }
+  };
+
+  const insertHtml = () => {
+    if (editor == null) return;
+    const html = `<p>我是html</p>`;
+    setHtml(html);
   };
 
   function insertCommand(command: string) {
@@ -87,83 +210,15 @@ function CustomCommandEditor() {
     }
   }
 
-  /* function insertIntro() {
-    if (editorRef.current) {
-      editorRef.current.restoreSelection();
-      const p = { type: "paragraph", children: [{ text: "旁白:" }] };
-      if (editor) {
-        SlateTransforms.insertNodes(editor, p, {
-          mode: "highest",
-        });
-      }
-    }
-  }
-  function insertFigure() {
-    if (editorRef.current) {
-      editorRef.current.restoreSelection();
-      const p = { type: "paragraph", children: [{ text: "立绘图片:" }] };
-      if (editor) {
-        SlateTransforms.insertNodes(editor, p, {
-          mode: "highest",
-        });
-      }
-    }
-  }
-  function insertBg() {
-    if (editorRef.current) {
-      editorRef.current.restoreSelection();
-      const p = { type: "paragraph", children: [{ text: "背景图片:" }] };
-      if (editor) {
-        SlateTransforms.insertNodes(editor, p, {
-          mode: "highest",
-        });
-      }
-    }
-  }
-  function insertBgm() {
-    if (editorRef.current) {
-      editorRef.current.restoreSelection();
-      const p = { type: "paragraph", children: [{ text: "背景音乐:" }] };
-      if (editor) {
-        SlateTransforms.insertNodes(editor, p, {
-          mode: "highest",
-        });
-      }
-    }
-  }
-  function insertDialog() {
-    if (editorRef.current) {
-      editorRef.current.restoreSelection();
-      const p = { type: "paragraph", children: [{ text: "对话:" }] };
-      if (editor) {
-        SlateTransforms.insertNodes(editor, p, {
-          mode: "highest",
-        });
-      }
-    }
-  }
-  function insertCallScene() {
-    if (editorRef.current) {
-      editorRef.current.restoreSelection();
-      const p = { type: "paragraph", children: [{ text: "切换转场:" }] };
-      if (editor) {
-        SlateTransforms.insertNodes(editor, p, {
-          mode: "highest",
-        });
-      }
-    }
-  }
-  function insertEnd() {
-    if (editorRef.current) {
-      editorRef.current.restoreSelection();
-      const p = { type: "paragraph", children: [{ text: "结束游戏" }] };
-      if (editor) {
-        SlateTransforms.insertNodes(editor, p, {
-          mode: "highest",
-        });
-      }
-    }
-  } */
+  // 编辑器配置
+  const editorConfig: Partial<IEditorConfig> = {
+    placeholder: "请输入内容...",
+    EXTEND_CONF: {
+      commandEditotConfig: {
+        putEditorText,
+      },
+    },
+  };
 
   // 及时销毁 editor ，重要！
   useEffect(() => {
@@ -171,6 +226,7 @@ function CustomCommandEditor() {
       if (editor == null) return;
       editor.destroy();
       setEditor(null);
+      editorRef.current?.destroy();
       editorRef.current = null;
     };
   }, [editor]);
@@ -183,62 +239,88 @@ function CustomCommandEditor() {
 
   const handleChange = (_editor: IDomEditor) => {
     if (_editor == null) return;
-
-    // console.log(_editor.getHtml());
   };
 
   return (
-    <>
-      <div
-        style={{
-          border: "1px solid #ccc",
-          width: "50%",
-          marginLeft: "200px",
-        }}
-      >
-        <div className="add-command">
-          <a
-            className="add-icon"
-            href="javascript:void(0);"
-            onClick={() => setShow(!show)}
-          >
-            <img className="img" src="/icon/add.png" />
-          </a>
-          {show && (
-            <>
-              {/* <div className="mask" onClick={() => setShow(false)}></div> */}
-              <div className="panel">
-                {commands.map((command, index) => (
-                  <div
-                    className="cell"
-                    key={index}
-                    onClick={() => setShow(false)}
-                  >
-                    <img className="icon" src={command.icon} />
-                    <a
-                      href="javascript:void(0);"
-                      className="command"
-                      onClick={() => insertCommand(command.command)}
-                    >
-                      {command.label}
-                    </a>
-                  </div>
-                ))}
-              </div>
-            </>
-          )}
-        </div>
-        <Editor
-          defaultConfig={editorConfig}
-          value={html}
-          onCreated={handleCreated}
-          onChange={handleChange}
-          mode="default"
-          style={{ height: "300px" }}
-        />
+    <div className="body">
+      {openMask && <div className="mask" />}
+      {/* {左侧栏} */}
+      <div className="sidebar fixed-sidebar-left">
+        <button onClick={insertHtml}>insertHtml</button>
+        <br />
+        <button onClick={undoText}>撤销</button>
+        <br />
+        <button onClick={redoText}>重做</button>
+        <br />
+        <Upload {...uploadText} className="uploadtxt">
+          <button>上传txt</button>
+        </Upload>
+        {/* <div style={{ marginTop: "15px" }}>{html}</div> */}
       </div>
-      <div style={{ marginTop: "15px" }}>{html}</div>
-    </>
+
+      {/* {中间区域} */}
+      <div className="main-content">
+        <div className="editor">
+          <div className="add-command">
+            <div className="add-icon" onClick={() => setShow(!show)}>
+              <img className="img" src="/icon/add.png" alt="icon" />
+            </div>
+            {show && (
+              <>
+                {/* <div className="mask" onClick={() => setShow(false)}></div> */}
+                <div className="panel">
+                  {commands.map((command, index) => (
+                    <div
+                      className="cell"
+                      key={index}
+                      onClick={() => setShow(false)}
+                    >
+                      <img className="icon" src={command.icon} alt="icon" />
+                      <div
+                        className="command"
+                        onClick={() => insertCommand(command.command)}
+                      >
+                        {command.label}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </>
+            )}
+          </div>
+          <Editor
+            defaultConfig={editorConfig}
+            value={html}
+            onCreated={handleCreated}
+            onChange={handleChange}
+            mode="simple"
+            style={{ minHeight: "300px" }}
+          />
+        </div>
+
+        <div className="push">
+          <div className="btn">发布</div>
+        </div>
+      </div>
+
+      {/* {右侧栏} */}
+      <div className="sidebar fixed-sidebar-right">
+        {/* 南海观音大战孙猴子|text
+        <br />
+        <input
+          type="text"
+          value={section}
+          onChange={(e) => setSection(e.target.value)}
+          placeholder="Type your section"
+        />
+        <br /> */}
+        <button onClick={() => renderSection("南海观音大战孙猴子")}>
+          渲染(南海观音大战孙猴子)
+        </button>
+        <br />
+        <button onClick={() => renderSection("text")}>渲染(text)</button>
+      </div>
+    </div>
   );
 }
 

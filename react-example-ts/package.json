@@ -12,6 +12,8 @@
     "@types/react-dom": "^18.3.0",
     "@wangeditor/editor": "^5.1.23",
     "@wangeditor/editor-for-react": "^1.0.6",
+    "antd": "^5.18.0",
+    "axios": "^1.7.2",
     "http-proxy-middleware": "^3.0.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
@@ -45,5 +47,6 @@
   },
   "peerDependencies": {
     "snabbdom": "^3.6.2"
-  }
+  },
+  "proxy": "http://10.10.77.121:3001"
 }
