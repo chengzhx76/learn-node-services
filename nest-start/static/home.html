@@ -23,16 +23,22 @@
                 if (!msg.value) {
                     return false;
                 }
-                conn.send(msg.value);
+
+                var sendMsg = JSON.stringify({
+                    event: '',
+                    data: msg.value
+                })
+
+                conn.send(sendMsg);
                 msg.value = "";
                 return false;
             };
 
             if (window["WebSocket"]) {
-                conn = new WebSocket("ws://" + document.location.host + "/api/webgalsync");
+                // conn = new WebSocket("ws://" + document.location.host + "/api/webgalsync");
                 // conn = new WebSocket("ws://" + document.location.host + "/api/webgalsync/message");
                 // conn = new WebSocket("ws://" + document.location.host + "/ping");
-                // conn = new WebSocket("ws://localhost:3001/api/ws");
+                conn = new WebSocket("ws://localhost:3001/api/test-ws");
                 // conn = new WebSocket("ws://localhost:9999/");
                 conn.onclose = function (evt) {
                     var item = document.createElement("div");

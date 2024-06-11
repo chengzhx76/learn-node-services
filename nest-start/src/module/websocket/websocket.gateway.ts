@@ -12,7 +12,7 @@ import { Server, WebSocket } from 'ws';
   {"event":"message","data":"hi"}
 */
 
-@WebSocketGateway({ path: '/api/ws', transports: 'websocket' })
+@WebSocketGateway({ path: '/api/test-ws', transports: 'websocket' })
 export class ChatWebSocketGateway {
   @WebSocketServer()
   private server: Server;
@@ -53,6 +53,20 @@ export class ChatWebSocketGateway {
       socket.send(sendData);
     });
   }
+  @SubscribeMessage('ping')
+  handlePingMessage(
+    @MessageBody() data: string /* , @ConnectedSocket() client: WebSocket */,
+  ): void {
+    console.log('ChatWebSocketGateway.handlePingMessage==> ');
+    this.connectionList.forEach((socket) => {
+      const sendData = JSON.stringify({
+        event: 'pong',
+        data: data,
+      });
+      socket.send(sendData);
+    });
+  }
+
   @SubscribeMessage('')
   handleAllMessage(
     @MessageBody() data: string /* , @ConnectedSocket() client: WebSocket */,
