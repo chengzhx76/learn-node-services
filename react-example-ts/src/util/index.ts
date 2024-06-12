@@ -19,3 +19,7 @@ export const debounce = <T extends (...args: any[]) => any>(fn: T, ms = 300):Deb
     timeoutId = setTimeout(() => fn.apply(this, args), ms);
   };
 };
+
+export const randomCode = () => {
+  return (Math.random() * 100000).toString(16).replace(".", "d");
+}

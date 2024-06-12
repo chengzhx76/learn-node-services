@@ -6,27 +6,38 @@
 import { h, VNode, VNodeChildren } from 'snabbdom'
 import { DomEditor, IDomEditor, SlateElement, SlateTransforms } from '@wangeditor/editor'
 import { UiExpressionElement, UiPlayElement } from './custom-types'
-import { IExtendConfig } from '../utils/interface'
-
-function getUiEditorConfig(editor: IDomEditor) {
-  const { EXTEND_CONF } = editor.getConfig()
-  const { customEditotConfig } = EXTEND_CONF as IExtendConfig
-  return customEditotConfig
-}
 
 function renderUiExpression(elem: SlateElement, children: VNode[] | null, editor: IDomEditor): VNode {
 
-  const path = DomEditor.findPath(editor, elem);
-  const line = path[0]
+  const path = DomEditor.findPath(editor, elem); 
+  // console.log('renderUiExpression==> ', path);
 
-  const extend = getUiEditorConfig(editor)
+  
   function updateSelect(event:any) {
-    console.log('Selected value:', event.target.value, line);
-    if (extend && extend.selectUiExpression) { 
-      extend.selectUiExpression(line, '', event.target.value);
-    }
+    console.log('Selected value:', event.target.value, path[0]);
+    // console.log('Selected valueelem:', elem);
+    // console.log('Selected valuechildren:', children);
+    // elem.list = event.srcElement.value;
+    // console.log('Selected value:', event.target.value);
+    /* const p = { type: 'paragraph', children: [{ text: event.target.value }] };
+      const insertPath = [path[0]];
+      SlateTransforms.insertNodes(editor, p, {
+        at: insertPath // 在 link-card 后面插入
+      }); */
+    /* const selectDom = event.srcElement;
+    if (selectDom) {
+      selectDom.options[0].attrs = "selected";
+      for (let option of selectDom.options) {
+        if (option.value === event.target.value) {
+          option.selected = true;
+        } else {
+          option.selected = false;
+        }
+      }
+    } */
+    
   }
-
+  // 构建 vnode
   const { role = '', selected = '', list = [] } = elem as UiExpressionElement
   const options: VNodeChildren = []
   for (let i = 0; i < list.length; i++) {
@@ -49,7 +60,7 @@ function renderUiExpression(elem: SlateElement, children: VNode[] | null, editor
     options.push(option)
   }
   const vselectNode = h(
-    'select#id_'+path[0],
+    'select.id_'+path[0],
     {
       props: {
         // contentEditable: false, // 不可编辑
@@ -72,28 +83,14 @@ function renderUiExpression(elem: SlateElement, children: VNode[] | null, editor
 }
 
 function renderUiPlay(elem: SlateElement, children: VNode[] | null, editor: IDomEditor): VNode {
-  const extend = getUiEditorConfig(editor)
-  function onPay(event:any) {
-    // console.log('onPay value:', event);
-    if (extend && extend.playUiLine) { 
-      extend.playUiLine(event.sceneName, event.line);
-    }
-  }
-
-  const { line, sceneName } = elem as UiPlayElement
+  // 构建 vnode
+  const { line } = elem as UiPlayElement
 
   const vselectNode = h(
     'strong.ui-play',
     {
       props: {
-        contentEditable: false,
-      },
-      attrs: {
-        'data-line': line,
-        'data-scene': sceneName
-      },
-      on: {
-        click: () => onPay({ sceneName, line })
+        contentEditable: false, // 不可编辑
       },
       style: {
         marginLeft: '3px',

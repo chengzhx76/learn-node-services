@@ -19,5 +19,6 @@ export type UiExpressionElement = {
 export type UiPlayElement = {
   type: 'uiplay'
   line: string
+  sceneName: string
   children: EmptyText[]
 }

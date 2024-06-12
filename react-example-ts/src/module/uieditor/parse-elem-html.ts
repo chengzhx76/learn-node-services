@@ -31,7 +31,7 @@ function uiplayParseHtml(
   const line = elem.getAttribute('data-line') || ''
   return {
     type: 'uiplay',
-    line,
+    line: line,
     children: [{ text: '' }], // void node 必须有一个空白 text
   } as UiPlayElement
 }

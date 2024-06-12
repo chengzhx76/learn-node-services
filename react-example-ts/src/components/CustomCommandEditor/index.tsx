@@ -21,9 +21,11 @@ Boot.registerModule(commandeditorModule);
 
 const gameName = "cheng-t";
 
+console.log("init CustomCommandEditor.test");
+
 function CustomCommandEditor() {
   // editor 实例
-  const [section, setSection] = useState<string>("");
+  const [section, setSection] = useState<string>("text");
   const [editor, setEditor] = useState<IDomEditor | null>(null);
   const editorRef = useRef<IDomEditor | null>(null);
   const [html, setHtml] = useState("");
@@ -67,6 +69,18 @@ function CustomCommandEditor() {
     },
   ];
 
+  // 及时销毁 editor ，重要！
+  useEffect(() => {
+    return () => {
+      console.log("destroy.CustomCommandEditor");
+      if (editor == null) return;
+      editor.destroy();
+      setEditor(null);
+      editorRef.current?.destroy();
+      editorRef.current = null;
+    };
+  }, [editor]);
+
   useEffect(() => {
     renderContent();
     sessionStorage.setItem("__sectionName", section);
@@ -74,8 +88,6 @@ function CustomCommandEditor() {
 
   function renderSection(sectionName: string) {
     setSection(sectionName);
-    // sessionStorage.setItem("__sectionName", section);
-    // renderContent();
   }
 
   function renderContent() {
@@ -115,6 +127,15 @@ function CustomCommandEditor() {
     });
   }
 
+  // 清空内容
+  const clearRender = () => {
+    if (editorRef.current) {
+      // editorRef.current.clear();
+      // editorRef.current.setHtml("");
+      setHtml("");
+    }
+  };
+
   const uploadText: UploadProps = {
     name: "file",
     action: "/api/editor/editTxtScene/upload",
@@ -124,13 +145,23 @@ function CustomCommandEditor() {
       sectionName: section,
     },
     headers: {
-      Authorization: `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI2NjRjMDYzMGJhOGU4ZDI1MDJhZjUwMDEiLCJ1c2VybmFtZSI6ImNoZW5nZ2MiLCJpYXQiOjE3MTgwOTkyMjQsImV4cCI6MTcxODE4NTYyNH0.eRW9lhYDXgxpJosjPUgV2-NqkLtvvp8ebF3bypWa8Dw`,
+      Authorization: `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI2NjRjMDYzMGJhOGU4ZDI1MDJhZjUwMDEiLCJ1c2VybmFtZSI6ImNoZW5nZ2MiLCJpYXQiOjE3MTgxODU3ODQsImV4cCI6MTcxODI3MjE4NH0.s7XS_2yhjCzN27BcG8sv3Ql8b62-nL_vbhOvQTCbR4A`,
     },
     showUploadList: false,
     onChange(info) {
+      const resp = info.file.response;
+      // console.log("info", info.file.response);
+      if (!resp) {
+        return;
+      }
       setOpenMask(true);
       if (info.file.status === "done") {
         if (editorRef.current) {
+          if (resp && resp.code !== 200) {
+            editorRef.current.alert(resp.msg, "error");
+            setOpenMask(false);
+            return;
+          }
           const list = info.file.response.data;
           if (list && list.length === 0) {
             return;
@@ -142,7 +173,9 @@ function CustomCommandEditor() {
             html += `<p>${line.desc}</p>`;
           }
           if (html) {
-            /* editorRef.current?. */ setHtml(html);
+            setTimeout(() => {
+              setHtml(html);
+            }, 200);
           }
 
           /* editorRef.current.restoreSelection();
@@ -159,7 +192,7 @@ function CustomCommandEditor() {
     },
   };
 
-  const putEditorText = debounce(() => {
+  const putTextEditorText = debounce(() => {
     const sectionName = sessionStorage.getItem("__sectionName");
     const body = {
       gameName: gameName,
@@ -175,7 +208,7 @@ function CustomCommandEditor() {
     if (editor != null && editor.undo) {
       editor.undo();
       setTimeout(() => {
-        putEditorText();
+        putTextEditorText();
       }, 200);
     }
   };
@@ -184,7 +217,7 @@ function CustomCommandEditor() {
     if (editor != null && editor.redo) {
       editor.redo();
       setTimeout(() => {
-        putEditorText();
+        putTextEditorText();
       }, 200);
     }
   };
@@ -214,22 +247,11 @@ function CustomCommandEditor() {
   const editorConfig: Partial<IEditorConfig> = {
     placeholder: "请输入内容...",
     EXTEND_CONF: {
-      commandEditotConfig: {
-        putEditorText,
+      customEditotConfig: {
+        putTextEditorText,
       },
     },
   };
-
-  // 及时销毁 editor ，重要！
-  useEffect(() => {
-    return () => {
-      if (editor == null) return;
-      editor.destroy();
-      setEditor(null);
-      editorRef.current?.destroy();
-      editorRef.current = null;
-    };
-  }, [editor]);
 
   const handleCreated = (_editor: IDomEditor) => {
     if (_editor == null) return;
@@ -242,10 +264,11 @@ function CustomCommandEditor() {
   };
 
   return (
-    <div className="body">
+    <div className="text body">
       {openMask && <div className="mask" />}
       {/* {左侧栏} */}
       <div className="sidebar fixed-sidebar-left">
+        <h1>Text编辑器</h1>
         <button onClick={insertHtml}>insertHtml</button>
         <br />
         <button onClick={undoText}>撤销</button>
@@ -319,6 +342,8 @@ function CustomCommandEditor() {
         </button>
         <br />
         <button onClick={() => renderSection("text")}>渲染(text)</button>
+        <br />
+        <button onClick={() => clearRender}>清空渲染</button>
       </div>
     </div>
   );

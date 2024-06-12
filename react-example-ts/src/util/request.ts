@@ -13,7 +13,7 @@ const instance = axios.create({
 instance.interceptors.request.use(
   config => {
     // 可以在这里添加例如token等请求头
-    config.headers['Authorization'] = `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI2NjRjMDYzMGJhOGU4ZDI1MDJhZjUwMDEiLCJ1c2VybmFtZSI6ImNoZW5nZ2MiLCJpYXQiOjE3MTgwOTkyMjQsImV4cCI6MTcxODE4NTYyNH0.eRW9lhYDXgxpJosjPUgV2-NqkLtvvp8ebF3bypWa8Dw`;
+    config.headers['Authorization'] = `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI2NjRjMDYzMGJhOGU4ZDI1MDJhZjUwMDEiLCJ1c2VybmFtZSI6ImNoZW5nZ2MiLCJpYXQiOjE3MTgxODU3ODQsImV4cCI6MTcxODI3MjE4NH0.s7XS_2yhjCzN27BcG8sv3Ql8b62-nL_vbhOvQTCbR4A`;
     return config;
   },
   error => {

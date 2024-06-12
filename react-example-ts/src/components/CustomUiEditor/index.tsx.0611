@@ -231,7 +231,7 @@ function addExpression(editor: IDomEditor) {
   }
 }
 
-function CustomEditor() {
+function CustomUiEditor() {
   // editor 实例
   const [editor, setEditor] = useState<IDomEditor | null>(null);
   const editorRef = useRef<IDomEditor | null>(null);
@@ -523,4 +523,4 @@ function setUiPlayStyle() {
   }
 }
 
-export default CustomEditor;
+export default CustomUiEditor;

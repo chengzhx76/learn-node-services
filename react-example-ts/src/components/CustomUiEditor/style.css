@@ -1,0 +1,29 @@
+.ui .editor {
+  padding-right: 60px;
+}
+.ui p.line {
+  position: relative !important;
+}
+.ui span.warp-ui-play {
+  position: absolute !important;
+  top: 0 !important;
+  right: 0 !important;
+}
+.ui strong.ui-play {
+  position: absolute;
+  right: -60px;
+  cursor: pointer;
+}
+.ui .w-e-scroll {
+  overflow-y: visible !important;
+}
+.ui .mask {
+  position: fixed;
+  top: 0;
+  right: 0;
+  left: 0;
+  bottom: 0;
+  overflow: hidden;
+  z-index: 99;
+  background: rgba(0, 0, 0, .4);
+}

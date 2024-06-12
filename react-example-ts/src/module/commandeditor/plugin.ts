@@ -1,10 +1,10 @@
 import { IDomEditor } from '@wangeditor/editor'
-import { IExtendConfig } from './interface'
+import { IExtendConfig } from '../utils/interface'
 
 function getCommandEditorConfig(editor: IDomEditor) {
   const { EXTEND_CONF } = editor.getConfig()
-  const { commandEditotConfig } = EXTEND_CONF as IExtendConfig
-  return commandEditotConfig
+  const { customEditotConfig } = EXTEND_CONF as IExtendConfig
+  return customEditotConfig
 }
 
 function withUiEditor<T extends IDomEditor>(editor: T): T {   // TS 语法
@@ -14,25 +14,28 @@ function withUiEditor<T extends IDomEditor>(editor: T): T {   // TS 语法
 
   newEditor.insertText = t => {
     insertText(t);
-    const { putEditorText } = getCommandEditorConfig(newEditor);
-    if (putEditorText) { 
-      putEditorText();
+    // const { putTextEditorText } = getCommandEditorConfig(newEditor);
+    const extend = getCommandEditorConfig(newEditor);
+    if (extend && extend.putTextEditorText) { 
+      extend.putTextEditorText();
     }
   };
 
   newEditor.deleteBackward = (unit) => {
     deleteBackward(unit);
-    const { putEditorText } = getCommandEditorConfig(newEditor);
-    if (putEditorText) {
-      putEditorText();
+    // const { putTextEditorText } = getCommandEditorConfig(newEditor);
+    const extend = getCommandEditorConfig(newEditor);
+    if (extend && extend.putTextEditorText) {
+      extend.putTextEditorText();
     }
   };
 
   newEditor.insertBreak = () => {
     insertBreak();
-    const { putEditorText } = getCommandEditorConfig(newEditor);
-    if (putEditorText) { 
-      putEditorText();
+    // const { putTextEditorText } = getCommandEditorConfig(newEditor);
+    const extend = getCommandEditorConfig(newEditor);
+    if (extend && extend.putTextEditorText) { 
+      extend.putTextEditorText();
     }
   };
 

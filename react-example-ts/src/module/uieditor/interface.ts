@@ -7,7 +7,7 @@ import { IDomEditor } from '@wangeditor/editor'
 
 export interface IExtendConfig {
   uiEditotConfig: {
-    addPlay: (editor: IDomEditor) => void
+    putUiEditorText: () => void
     addExpression: (editor: IDomEditor) => void
   }
 }
