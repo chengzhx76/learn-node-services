@@ -15,11 +15,11 @@ import { UiExpressionElement, UiPlayElement } from './custom-types'
 </select>
 */
 // 生成 html 的函数
-function uieexpressionToHtml(elem: SlateElement, childrenHtml: string): string {
+function uiexpressionToHtml(elem: SlateElement, childrenHtml: string): string {
   const { role = '', selected = '', list = [] } = elem as UiExpressionElement
   let option = ''
-  for (let i = 0; i < list.length; i++) {
-    const { value, label } = list[i]
+  for(const data of list) {
+    const { value, label } = data;
     let isSelected = value === selected
     if (isSelected) {
       // option = option + `<option value="${value}" ${isSelected?? 'selected'}>${label}</option>`
@@ -36,15 +36,15 @@ function uieexpressionToHtml(elem: SlateElement, childrenHtml: string): string {
 
 // 生成 html 的函数
 function uiplayToHtml(elem: SlateElement, childrenHtml: string): string {
-  const { line = '' } = elem as UiPlayElement
-  const html = `<span class="ui-play" data-w-e-type="uiplay" data-line="${line}" data-w-e-is-void data-w-e-is-inline">Play</span>`
+  const { line, sceneName } = elem as UiPlayElement
+  const html = `<span class="ui-play" data-w-e-type="uiplay" data-line="${line}" data-scene="${sceneName}" data-w-e-is-void data-w-e-is-inline">Play</span>`
   return html
 }
 
 // 配置
 const uiexpressionElemToHtmlConf = {
   type: 'uiexpression', // 节点 type ，重要！！！
-  elemToHtml: uieexpressionToHtml,
+  elemToHtml: uiexpressionToHtml,
 }
 const uiplayElemToHtmlConf = {
   type: 'uiplay',

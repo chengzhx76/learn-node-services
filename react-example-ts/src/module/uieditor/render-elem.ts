@@ -4,7 +4,7 @@
  */
 
 import { h, VNode, VNodeChildren } from 'snabbdom'
-import { DomEditor, IDomEditor, SlateElement, SlateTransforms } from '@wangeditor/editor'
+import { DomEditor, IDomEditor, SlateElement } from '@wangeditor/editor'
 import { UiExpressionElement, UiPlayElement } from './custom-types'
 import { IExtendConfig } from '../utils/interface'
 

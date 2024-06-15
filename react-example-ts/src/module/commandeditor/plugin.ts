@@ -15,28 +15,28 @@ function withUiEditor<T extends IDomEditor>(editor: T): T {   // TS 语法
   newEditor.insertText = t => {
     insertText(t);
     // const { putTextEditorText } = getCommandEditorConfig(newEditor);
-    const extend = getCommandEditorConfig(newEditor);
+    /* const extend = getCommandEditorConfig(newEditor);
     if (extend && extend.putTextEditorText) { 
       extend.putTextEditorText();
-    }
+    } */
   };
 
   newEditor.deleteBackward = (unit) => {
     deleteBackward(unit);
     // const { putTextEditorText } = getCommandEditorConfig(newEditor);
-    const extend = getCommandEditorConfig(newEditor);
+    /* const extend = getCommandEditorConfig(newEditor);
     if (extend && extend.putTextEditorText) {
       extend.putTextEditorText();
-    }
+    } */
   };
 
   newEditor.insertBreak = () => {
     insertBreak();
     // const { putTextEditorText } = getCommandEditorConfig(newEditor);
-    const extend = getCommandEditorConfig(newEditor);
+    /* const extend = getCommandEditorConfig(newEditor);
     if (extend && extend.putTextEditorText) { 
       extend.putTextEditorText();
-    }
+    } */
   };
 
   return editor;

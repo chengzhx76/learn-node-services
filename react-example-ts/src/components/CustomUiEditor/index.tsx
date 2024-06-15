@@ -26,15 +26,14 @@ import uieditorModule, {
 } from "../../module/uieditor";
 Boot.registerModule(uieditorModule);
 
+// TODO 集成需要改成动态值
 const gameName = "test";
-let sceneShellName = "";
+const commkeys = ["旁白", "黑屏文字"];
 
+let initFinish = false;
 const userRoles = new Map<string, string[]>();
 
-console.log("init CustomUiEditor.test");
-
 function CustomUiEditor() {
-  // editor 实例
   const [editor, setEditor] = useState<IDomEditor | null>(null);
   const editorRef = useRef<IDomEditor | null>(null);
   const [html, setHtml] = useState("");
@@ -43,9 +42,7 @@ function CustomUiEditor() {
   // ==============base====================
   useEffect(() => {
     return () => {
-      console.log("destroy.CustomUiEditor");
       if (editor == null) return;
-      console.log("destroy.CustomUiEditor2");
       editor.destroy();
       setEditor(null);
       if (editorRef.current == null) return;
@@ -63,6 +60,9 @@ function CustomUiEditor() {
   const handleChange = (_editor: IDomEditor) => {
     if (_editor == null) return;
     setUiPlayStyle();
+    if (initFinish) {
+      putUiEditorText();
+    }
   };
 
   // ==============http res====================
@@ -73,71 +73,96 @@ function CustomUiEditor() {
         list.forEach((item: any) => {
           userRoles.set(item.role, item.expression);
         });
-        // console.log("====> userRoles", userRoles);
       }
     });
   }
 
   // ================main==================
-  const [section, setSection] = useState<string>("1");
-  const [scene, setScene] = useState<string>("北海");
+  const [section, setSection] = useState<string>("西游记第99章");
+  const [scene, setScene] = useState<string>("孙悟空大战白骨精");
 
-  function addExpression(editor: IDomEditor) {
-    console.log("====>addExpression");
+  function addExpression(editor: IDomEditor, inputText: string) {
+    // console.log("====>addExpression");
     const { selection } = editor;
     if (editor && selection) {
       editor.restoreSelection();
 
       const node = SlateNode.get(editor, selection.anchor.path);
       const text = SlateNode.string(node);
-      console.log("text", text);
-      if (text && (text.indexOf(":") > -1 || text.indexOf("：") > -1)) {
-        return;
-      }
-      const role = text.substring(0, text.length);
-      let exs: string[] | undefined = userRoles.get(role);
-      const list: Expression[] = [];
-      if (exs) {
-        exs.forEach((ex) => {
-          list.push({
-            label: ex,
-            value: ex,
-          });
-        });
-      }
-      if (!list || list.length === 0) {
-        list.push({
-          label: "无立绘",
-          value: "",
-        });
-      }
-      const expressionNode: UiExpressionElement = {
-        type: "uiexpression",
-        role: role,
-        selected: "",
-        list: list,
-        children: [{ text: "" }],
-      };
-      const playNode: UiPlayElement = {
-        type: "uiplay",
-        line: randomCode(),
-        sceneName: sceneShellName,
-        children: [{ text: "" }],
-      };
 
-      SlateTransforms.insertNodes(editor, expressionNode, {
-        at: selection.anchor.path,
-      });
-      SlateTransforms.insertNodes(editor, playNode, {
-        at: selection.anchor.path,
-      });
+      console.log("text===>", text, inputText);
+
+      if (text) {
+        if (inputText === ":" || inputText === "：") {
+          const isInclude = commkeys.some((commkey) => text.includes(commkey));
+          if (isInclude) {
+            return;
+          } else {
+            insertExpressionNode(editor, text);
+          }
+        }
+      } else {
+        if (inputText) {
+          insertPlayNode(editor);
+        }
+      }
     }
   }
 
+  function insertExpressionNode(_editor: IDomEditor, text: string) {
+    console.log("insertExpressionNode===>", text);
+    const role = text.substring(0, text.length);
+    let exs: string[] | undefined = userRoles.get(role);
+    const list: Expression[] = [];
+    if (exs) {
+      exs.forEach((ex) => {
+        list.push({
+          label: ex,
+          value: ex,
+        });
+      });
+    }
+    if (!list || list.length === 0) {
+      list.push({
+        label: "无立绘",
+        value: "",
+      });
+    }
+    const expressionNode: UiExpressionElement = {
+      type: "uiexpression",
+      role: role,
+      selected: "",
+      list: list,
+      children: [{ text: "" }],
+    };
+    const { selection } = _editor;
+    SlateTransforms.insertNodes(_editor, expressionNode, {
+      at: selection?.anchor.path,
+    });
+  }
+
+  function insertPlayNode(editor: IDomEditor) {
+    console.log("insertPlayNode===>");
+    const { selection } = editor;
+    const playNode: UiPlayElement = {
+      type: "uiplay",
+      line: randomCode(),
+      sceneName: scene,
+      children: [{ text: "" }],
+    };
+    SlateTransforms.insertNodes(editor, playNode, {
+      at: selection?.anchor.path,
+    });
+  }
+
   function selectUiExpression(line: number, role: string, expression: string) {
-    console.log("selectUiExpression===>", line, role, expression, `id_${line}`);
+    // console.log("selectUiExpression===>", line, role, expression, `id_${line}`);
     setTimeout(() => {
-      _putUiEditorText();
+      _putUiEditorText().then((res) => {
+        if (res) {
+          renderContent();
+        }
+      });
     }, 200);
     /* const selectDom = document.getElementById(
       `id_${line}`
@@ -155,12 +180,21 @@ function CustomUiEditor() {
     } */
   }
   function playUiLine(sceneName: string, line: string) {
-    console.log("playUiLine===>", line, sceneName);
+    const body = {
+      gameName: gameName,
+      sectionName: section,
+      sceneName: sceneName,
+    };
+    request
+      .post(`/api/editor/scene/command/${line}`, body)
+      .then((resp: any) => {
+        const data = resp.data.data;
+        console.log("playUiLine===>", data);
+      });
   }
 
   useEffect(() => {
     renderContent();
-    sessionStorage.setItem("__scene", scene);
   }, [scene]);
 
   function renderSection(sceneName: string) {
@@ -171,6 +205,8 @@ function CustomUiEditor() {
     if (!section) {
       return;
     }
+    setOpenMask(true);
+    initFinish = false;
     const body = {
       gameName: gameName,
       sectionName: section,
@@ -178,39 +214,38 @@ function CustomUiEditor() {
       sceneType: "editor",
     };
 
-    setOpenMask(true);
     request.post("/api/editor/sceneDetail", body).then((resp: any) => {
       const data = resp.data.data;
       if (data && editorRef.current) {
         if (userRoles.size === 0) {
           getRoleList();
         }
-        sceneShellName = data.scene;
-        renderScene(editorRef.current, data.dialogues, data.scene);
+        renderScene(editorRef.current, data.dialogues, scene);
       }
     });
   }
 
-  function renderScene(_editor: IDomEditor, list: any, sceneShellName: string) {
+  function renderScene(_editor: IDomEditor, list: any, scene: string) {
     if (!_editor) {
       return;
     }
     _editor.restoreSelection();
     _editor.clear();
-    // _editor.setHtml("");
-    // setHtml("");
     setTimeout(() => {
       for (let i = 0; i < list.length; i++) {
         const line = list[i];
         let text = line.desc;
         if (line.role) {
-          text = `${line.role}:${text}`;
+          text = `${line.role}${text}`;
         }
 
         renderText(_editor, text, i);
         renderExpression(_editor, line, i);
-        renderPlay(_editor, sceneShellName, i);
+        renderPlay(_editor, scene, line.sentence, i);
       }
+      setTimeout(() => {
+        initFinish = true;
+      }, 300);
       setOpenMask(false);
     }, 1000);
   }
@@ -228,51 +263,51 @@ function CustomUiEditor() {
   function renderExpression(_editor: IDomEditor, line: any, i: number) {
     const role = line.role;
     const label = line.label;
-    if (label) {
-      const localExs: string[] | undefined = userRoles.get(role);
-      // console.log('cheng.查找角色的差分图===> ', role, localExs);
-      if (!localExs || localExs.length === 0) {
-        return;
-      }
-      const exs: Expression[] = [];
-      if (localExs) {
-        for (let ex of localExs) {
-          exs.push({
-            label: ex,
-            value: ex,
-          });
-        }
-      } else {
+
+    if (!role && !label) {
+      return;
+    }
+
+    const localExs: string[] | undefined = userRoles.get(role);
+    const exs: Expression[] = [];
+    if (localExs) {
+      for (let ex of localExs) {
         exs.push({
-          label: "无立绘",
-          value: "",
+          label: ex,
+          value: ex,
         });
       }
-      const expressionNode: UiExpressionElement = {
-        type: "uiexpression",
-        role: role,
-        selected: label,
-        list: exs,
-        children: [{ text: "" }],
-      };
-
-      SlateTransforms.insertNodes(_editor, expressionNode, { at: [i, 0] });
+    } else {
+      exs.push({
+        label: "无立绘",
+        value: "",
+      });
     }
+    const expressionNode: UiExpressionElement = {
+      type: "uiexpression",
+      role: role,
+      selected: label,
+      list: exs,
+      children: [{ text: "" }],
+    };
+
+    SlateTransforms.insertNodes(_editor, expressionNode, { at: [i, 0] });
   }
 
   // 再渲染 Play Btn
   function renderPlay(
     _editor: IDomEditor,
-    sceneShellName: string,
-    line: number
+    scene: string,
+    line: string,
+    i: number
   ) {
     const playNode: UiPlayElement = {
       type: "uiplay",
-      sceneName: sceneShellName,
-      line: randomCode(),
+      sceneName: scene,
+      line: line,
       children: [{ text: "" }],
     };
-    SlateTransforms.insertNodes(_editor, playNode, { at: [line, 0] });
+    SlateTransforms.insertNodes(_editor, playNode, { at: [i, 0] });
   }
 
   // 清空内容
@@ -280,9 +315,6 @@ function CustomUiEditor() {
     if (editorRef.current) {
       editorRef.current.restoreSelection();
       editorRef.current.clear();
-      // editorRef.current.setHtml("");
-      // console.log("clearRender==>");
-      // setHtml("1");
     }
   };
 
@@ -305,62 +337,61 @@ function CustomUiEditor() {
         if (editorRef.current) {
           const data = info.file.response.data;
 
-          // console.log("uploadText===>", list);
-
           if (data && data.dialogues.length === 0) {
             return;
           }
-          /* editorRef.current.restoreSelection();
-          editorRef.current.clear(); */
-
-          renderScene(editorRef.current, data.dialogues, data.scene);
+          renderScene(editorRef.current, data.dialogues, scene);
         }
       }
     },
   };
 
   const _putUiEditorText = () => {
-    // TODO 改成异步，【异步成功后刷新页面 renderContent(); 对于选择表情后】
-    const lineDoms = document.querySelectorAll("div.w-e-text-container p");
-    const scenes = [];
-    for (let lineDom of lineDoms) {
-      const selectDom = lineDom.querySelector("select");
+    return new Promise((resolve, reject) => {
+      const lineDoms = document.querySelectorAll("div.w-e-text-container p");
+      const scenes = [];
+      for (let lineDom of lineDoms) {
+        const selectDom = lineDom.querySelector("select");
 
-      const playDom = lineDom.querySelector(".ui-play");
-      let line = "";
-      if (playDom && playDom.hasAttribute("data-line")) {
-        line = playDom.getAttribute("data-line") as string;
-      }
+        const playDom = lineDom.querySelector(".ui-play");
+        let line = "";
+        if (playDom && playDom.hasAttribute("data-line")) {
+          line = playDom.getAttribute("data-line") as string;
+        }
 
-      let expression = "";
-      if (selectDom) {
-        expression = selectDom.value;
+        let expression = "";
+        if (selectDom) {
+          expression = selectDom.value;
+        }
+        let text = getChildNodesText(lineDom.childNodes);
+
+        scenes.push({
+          expression,
+          text,
+          line,
+        });
       }
-      let text = getChildNodesText(lineDom.childNodes);
-      scenes.push({
-        expression,
-        text,
-        line,
+      let text = "";
+      scenes.forEach((scene) => {
+        if (scene.text) {
+          text += `${scene.line}|${scene.expression}|${scene.text}\n`;
+        }
       });
-    }
-    let text = "";
-    scenes.forEach((scene) => {
-      if (scene.text) {
-        text += `${scene.expression}|${scene.text}\n`;
-      }
-    });
-    // console.log('cheng.发送-scenes-text======> ', text);
+      // console.log("cheng.发送-scenes-text======> ", text);
 
-    const sectionName = sessionStorage.getItem("__scene");
-    const body = {
-      gameName: gameName,
-      sectionName: section,
-      sceneName: sectionName,
-      dialogue: text,
-    };
-    // 动态上传用户输入内容
-    request.post("/api/editor/editUiScene/dialogue", body).then((resp: any) => {
-      // console.log("===保存场景内容==>", resp.data.data);
+      const body = {
+        gameName: gameName,
+        sectionName: section,
+        sceneName: scene,
+        dialogue: text,
+      };
+      // 动态上传用户输入内容
+      request
+        .post("/api/editor/editUiScene/dialogue", body)
+        .then((resp: any) => {
+          // console.log("===保存场景内容==>", resp.data.data);
+          resolve(true);
+        });
     });
   };
 
@@ -393,20 +424,18 @@ function CustomUiEditor() {
     editor.restoreSelection();
     setHtml(html);
   };
+  const insertText = () => {
+    if (editor == null) return;
+    editor.insertText("hh");
+  };
   const undoText = () => {
     if (editor != null && editor.undo) {
       editor.undo();
-      setTimeout(() => {
-        putUiEditorText();
-      }, 200);
     }
   };
   const redoText = () => {
     if (editor != null && editor.redo) {
       editor.redo();
-      setTimeout(() => {
-        putUiEditorText();
-      }, 200);
     }
   };
   // =================end=================
@@ -430,6 +459,8 @@ function CustomUiEditor() {
       <div className="sidebar fixed-sidebar-left">
         <h1>Ui编辑器</h1>
         <button onClick={insertHtml}>insertHtml</button>
+        <br />
+        <button onClick={insertText}>insertText</button>
         <br />
         <button onClick={() => setHtml("")}>setHtml</button>
         <br />
@@ -465,19 +496,14 @@ function CustomUiEditor() {
 
       {/* {右侧栏} */}
       <div className="sidebar fixed-sidebar-right">
-        {/* 南海观音大战孙猴子|text
-      <br />
-      <input
-        type="text"
-        value={section}
-        onChange={(e) => setSection(e.target.value)}
-        placeholder="Type your section"
-      />
-      <br /> */}
-        <h1>{scene}</h1>
-        <button onClick={() => renderSection("北海")}>渲染(北海)</button>
+        <h3>{scene}</h3>
+        <button onClick={() => renderSection("孙悟空大战白骨精")}>
+          渲染(孙悟空大战白骨精)
+        </button>
         <br />
-        <button onClick={() => renderSection("南海")}>渲染(南海)</button>
+        <button onClick={() => renderSection("孙悟空大战无天")}>
+          渲染(孙悟空大战无天)
+        </button>
         <br />
         <button onClick={clearRender}>清空渲染</button>
       </div>

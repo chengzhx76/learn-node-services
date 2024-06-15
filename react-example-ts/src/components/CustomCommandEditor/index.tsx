@@ -2,29 +2,22 @@ import "@wangeditor/editor/dist/css/style.css";
 import "./style.css";
 import "./layout.css";
 
-import React, { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Editor } from "@wangeditor/editor-for-react";
-import {
-  IDomEditor,
-  IEditorConfig,
-  Boot,
-  SlateTransforms,
-} from "@wangeditor/editor";
+import { IDomEditor, IEditorConfig } from "@wangeditor/editor";
 import type { UploadProps } from "antd";
 import { Upload } from "antd";
 
 import request from "../../util/request";
 import { debounce } from "../../util";
 
-import commandeditorModule from "../../module/commandeditor";
-Boot.registerModule(commandeditorModule);
+// import commandeditorModule from "../../module/commandeditor";
+// Boot.registerModule(commandeditorModule);
 
 const gameName = "cheng-t";
 
-console.log("init CustomCommandEditor.test");
-
+let initFinish = false;
 function CustomCommandEditor() {
-  // editor 实例
   const [section, setSection] = useState<string>("text");
   const [editor, setEditor] = useState<IDomEditor | null>(null);
   const editorRef = useRef<IDomEditor | null>(null);
@@ -69,10 +62,8 @@ function CustomCommandEditor() {
     },
   ];
 
-  // 及时销毁 editor ，重要！
   useEffect(() => {
     return () => {
-      console.log("destroy.CustomCommandEditor");
       if (editor == null) return;
       editor.destroy();
       setEditor(null);
@@ -83,7 +74,6 @@ function CustomCommandEditor() {
 
   useEffect(() => {
     renderContent();
-    sessionStorage.setItem("__sectionName", section);
   }, [section]);
 
   function renderSection(sectionName: string) {
@@ -100,38 +90,34 @@ function CustomCommandEditor() {
       sceneType: "editor",
     };
 
-    // setHtml("");
+    initFinish = false;
     setOpenMask(true);
     request.post("/api/editor/sceneDetail", body).then((resp: any) => {
-      const list = resp.data.data;
-      if (list && editorRef.current) {
+      const data = resp.data.data;
+      if (data && editorRef.current) {
         editorRef.current.restoreSelection();
         editorRef.current.clear();
 
         let html = "";
-        for (const line of list) {
+        for (const line of data.texts) {
           html += `<p>${line.desc}</p>`;
         }
-        // console.log("=====html===>", html);
         if (html) {
-          /* editorRef.current?. */ setHtml(html);
+          setTimeout(() => {
+            setHtml(html);
+          }, 100);
         }
-        /* setTimeout(() => {
-          if (editorRef.current) {
-            const end = SlateEditor.end(editorRef.current, []);
-            SlateTransforms.select(editorRef.current, end);
-          }
-        }, 100); */
-        setOpenMask(false);
       }
+      setTimeout(() => {
+        initFinish = true;
+      }, 300);
+      setOpenMask(false);
     });
   }
 
   // 清空内容
   const clearRender = () => {
     if (editorRef.current) {
-      // editorRef.current.clear();
-      // editorRef.current.setHtml("");
       setHtml("");
     }
   };
@@ -150,7 +136,6 @@ function CustomCommandEditor() {
     showUploadList: false,
     onChange(info) {
       const resp = info.file.response;
-      // console.log("info", info.file.response);
       if (!resp) {
         return;
       }
@@ -159,6 +144,7 @@ function CustomCommandEditor() {
         if (editorRef.current) {
           if (resp && resp.code !== 200) {
             editorRef.current.alert(resp.msg, "error");
+            initFinish = true;
             setOpenMask(false);
             return;
           }
@@ -175,28 +161,19 @@ function CustomCommandEditor() {
           if (html) {
             setTimeout(() => {
               setHtml(html);
+              initFinish = true;
+              setOpenMask(false);
             }, 200);
           }
-
-          /* editorRef.current.restoreSelection();
-          editorRef.current.setHtml("");
-          let html = "";
-          for (const line of list) {
-            // renderText(editorRef.current, list[i].desc, i);
-            html += `<p>${line.desc}</p>\n`;
-          }
-          editorRef.current.setHtml(html); */
-          setOpenMask(false);
         }
       }
     },
   };
 
   const putTextEditorText = debounce(() => {
-    const sectionName = sessionStorage.getItem("__sectionName");
     const body = {
       gameName: gameName,
-      sectionName: sectionName,
+      sectionName: section,
       text: editorRef.current?.getText(),
     };
     request.post("/api/editor/editTxtScene", body).then((resp: any) => {
@@ -207,18 +184,12 @@ function CustomCommandEditor() {
   const undoText = () => {
     if (editor != null && editor.undo) {
       editor.undo();
-      setTimeout(() => {
-        putTextEditorText();
-      }, 200);
     }
   };
 
   const redoText = () => {
     if (editor != null && editor.redo) {
       editor.redo();
-      setTimeout(() => {
-        putTextEditorText();
-      }, 200);
     }
   };
 
@@ -234,23 +205,13 @@ function CustomCommandEditor() {
       if (command !== "结束游戏") {
         command += ":";
       }
-      const p = { type: "paragraph", children: [{ text: command }] };
-      if (editor) {
-        SlateTransforms.insertNodes(editor, p, {
-          mode: "highest",
-        });
-      }
+      editorRef.current.insertText(command);
     }
   }
 
   // 编辑器配置
   const editorConfig: Partial<IEditorConfig> = {
     placeholder: "请输入内容...",
-    EXTEND_CONF: {
-      customEditotConfig: {
-        putTextEditorText,
-      },
-    },
   };
 
   const handleCreated = (_editor: IDomEditor) => {
@@ -261,6 +222,9 @@ function CustomCommandEditor() {
 
   const handleChange = (_editor: IDomEditor) => {
     if (_editor == null) return;
+    if (initFinish) {
+      putTextEditorText();
+    }
   };
 
   return (
@@ -328,15 +292,7 @@ function CustomCommandEditor() {
 
       {/* {右侧栏} */}
       <div className="sidebar fixed-sidebar-right">
-        {/* 南海观音大战孙猴子|text
-        <br />
-        <input
-          type="text"
-          value={section}
-          onChange={(e) => setSection(e.target.value)}
-          placeholder="Type your section"
-        />
-        <br /> */}
+        <h3>{section}</h3>
         <button onClick={() => renderSection("南海观音大战孙猴子")}>
           渲染(南海观音大战孙猴子)
         </button>
