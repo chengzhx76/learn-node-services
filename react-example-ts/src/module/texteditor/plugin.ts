@@ -1,12 +1,11 @@
 import { IDomEditor, DomEditor, SlateTransforms, SlateEditor, SlateRange, SlateNode, SlateElement } from '@wangeditor/editor'
-import { Location } from 'slate'
-import { IExtendConfig } from './interface'
+import { IExtendConfig } from '../utils/interface'
 import { TextCommandElement } from "./custom-types";
 
 function getUiEditorConfig(editor: IDomEditor) {
   const { EXTEND_CONF } = editor.getConfig()
-  const { textEditotConfig } = EXTEND_CONF as IExtendConfig
-  return textEditotConfig
+  const { customEditotConfig } = EXTEND_CONF as IExtendConfig
+  return customEditotConfig
 }
 
 function withUiEditor<T extends IDomEditor>(editor: T): T {   // TS 语法

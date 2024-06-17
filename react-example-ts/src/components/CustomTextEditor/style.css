@@ -30,6 +30,7 @@ ul.commands {
   background: #808836;
   border-radius: 6px;
 }
+
 ul.commands li {
   list-style: none;
   font-size: 16px;
@@ -41,6 +42,7 @@ ul.commands li {
 .hide {
   display: none;
 }
+
 .show {
   display: inline-block;
 }

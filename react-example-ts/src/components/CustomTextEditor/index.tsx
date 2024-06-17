@@ -14,33 +14,6 @@ import {
 import texteditorModule, { TextCommandElement } from "../../module/texteditor";
 Boot.registerModule(texteditorModule);
 
-function addTextCommand(editor: IDomEditor) {
-  console.log("====>addTextCommand");
-  const { selection } = editor;
-  const commandNode: TextCommandElement = {
-    type: "textcommand",
-    list: [
-      {
-        label: "插入旁白",
-        command: "插入旁白:",
-      },
-      {
-        label: "插入立绘图片",
-        command: "插入立绘图片:",
-      },
-      {
-        label: "结束游戏",
-        command: "结束游戏",
-      },
-    ],
-    children: [{ text: "" }],
-  };
-
-  if (editor && selection) {
-    editor.restoreSelection(); // 恢复选区
-  }
-}
-
 function CustomTextEditor() {
   // editor 实例
   const [editor, setEditor] = useState<IDomEditor | null>(null);
@@ -51,13 +24,13 @@ function CustomTextEditor() {
   const editorConfig: Partial<IEditorConfig> = {
     placeholder: "请输入内容...",
     EXTEND_CONF: {
-      textEditotConfig: {
-        addTextCommand,
+      customEditotConfig: {
+        addTextCommandPanel,
       },
     },
   };
 
-  function insertTextCommand() {
+  function addTextCommandPanel() {
     const commandNode: TextCommandElement = {
       type: "textcommand",
       list: [
@@ -125,7 +98,7 @@ function CustomTextEditor() {
     setEditor(_editor);
     editorRef.current = _editor;
     setTimeout(() => {
-      insertTextCommand();
+      addTextCommandPanel();
     }, 500);
   };
 
@@ -155,7 +128,7 @@ function CustomTextEditor() {
         />
       </div>
       <div style={{ marginTop: "15px" }}>{html}</div>
-      <button onClick={insertTextCommand}>insertTextCommand</button>
+      <button onClick={addTextCommandPanel}>insertTextCommand</button>
     </>
   );
 }

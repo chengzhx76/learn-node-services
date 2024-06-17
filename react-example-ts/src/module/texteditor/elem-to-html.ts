@@ -7,7 +7,7 @@ import { SlateElement } from '@wangeditor/editor'
 import { TextCommandElement, TextLabelElement } from './custom-types'
 
 /*
-<ul class="commands">
+<div class="commands">
   <li>插入旁白</li>
   <li>插入立绘图片</li>
   <li>插入背景图片</li>
@@ -15,7 +15,7 @@ import { TextCommandElement, TextLabelElement } from './custom-types'
   <li>插入对话</li>
   <li>切换转场</li>
   <li>结束游戏</li>
-</ul>
+</div>
 */
 // 生成 html 的函数
 function textcommandToHtml(elem: SlateElement, childrenHtml: string): string {

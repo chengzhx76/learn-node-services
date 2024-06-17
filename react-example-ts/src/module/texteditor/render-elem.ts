@@ -1,86 +1,77 @@
-/**
- * @description render elem
- * @author wangfupeng
- */
-
 import { h, VNode, VNodeChildren } from 'snabbdom'
-import { DomEditor, IDomEditor, SlateElement, SlateTransforms, SlateEditor } from '@wangeditor/editor'
+import { DomEditor, IDomEditor, SlateElement, SlateTransforms, SlateNode } from '@wangeditor/editor'
+import { Location } from 'slate'
 import { TextCommandElement, TextLabelElement } from './custom-types'
 
-/* function showCommandPanel() {
+function showCommandPanel(line: number) { 
+  console.log("showCommandPanel", line);
   const commandPanelDoms = document.querySelectorAll(".commands");
-  console.log('commandPanelDoms==>', commandPanelDoms)
-  if (commandPanelDoms && commandPanelDoms.length > 0) {
-    for (let i = 0; i < commandPanelDoms.length; i++) {
-      const commandPanelDom = commandPanelDoms[i];
-      console.log('commandPanelDom.className', commandPanelDom.className);
-      if (commandPanelDom.className.indexOf("show") > -1) {
-        commandPanelDom.className = "commands hide";
-      } else {
-        commandPanelDom.className = "commands show";
-      }
+  for (let i = 0; i < commandPanelDoms.length; i++) {
+    const commandPanelDom = commandPanelDoms[i];
+    if (commandPanelDom.className.indexOf("show") > -1) {
+      commandPanelDom.className = "commands hide";
     }
   }
+  const commandPanelDom = commandPanelDoms[line];
+  if (commandPanelDom) { 
+    commandPanelDom.className = "commands show";
+  }
 }
- */
 
-function renderText(editor: IDomEditor, text: string, i: number) {
-  /* const p = { type: "paragraph", children: [{ text: text }] };
-  SlateTransforms.insertNodes(editor, p, {
-    at: [i],
-    // mode: "highest",
-  }); */
-  if (editor) {
+function addCommand(editor: IDomEditor, line:number, command:string) {
+  hideCommandPanel(line)
+  renderCommandText(editor, command, line);
+}
+
+function hideCommandPanel(line: number) { 
+  const commandPanelDoms = document.querySelectorAll(".commands");
+  const commandPanelDom = commandPanelDoms[line];
+  if (commandPanelDom) {
+    commandPanelDom.className = "commands hide";
+  }
+}
+
+function renderCommandText(editor: IDomEditor, text: string, i: number) {
+  if (editor && editor.selection) {
 
     const { selection } = editor;
+    const linePath = selection.anchor.path;
+
+    const descendantNodes = SlateNode.descendants(editor, {
+      from: [linePath[0]],
+      to: [linePath[0]],
+      reverse: true,
+      pass: ([node]) => DomEditor.getNodeType(node) === "textlabel",
+    });
+
+    let removePath: Location = [];
+    for (const [node, path] of descendantNodes) {
+      console.log(node, path);
+
+      const type = DomEditor.getNodeType(node);
+      if (type === "textlabel") {
+        removePath = path;
+        break;
+      }
+    }
+    if (removePath.length > 0) {
+      SlateTransforms.removeNodes(editor, { at: removePath });
+    }
 
     const labelNode:TextLabelElement = {
       type: "textlabel",
       value: text,
       children: [{ text: "" }],
     };
-    // editor.restoreSelection();
     editor.insertNode(labelNode);
-    // SlateTransforms.insertNodes(editor, labelNode, {at: [i, 2]});
   }
 }
 
-
-
-function renderTextCommand(elem: SlateElement, children: VNode[] | null, editor: IDomEditor): VNode {
+function renderTextCommandPanel(elem: SlateElement, children: VNode[] | null, editor: IDomEditor): VNode {
 
   const path = DomEditor.findPath(editor, elem); 
   console.log('renderTextCommand==> ', path);
   
-  function showCommand(line:number, event?: MouseEvent) { 
-    console.log('showCommand==> ', line);
-    // showCommandPanel()
-    const commandPanelDoms = document.querySelectorAll(".commands");
-    for (let i = 0; i < commandPanelDoms.length; i++) {
-      const commandPanelDom = commandPanelDoms[i];
-      if (commandPanelDom.className.indexOf("show") > -1) {
-        commandPanelDom.className = "commands hide";
-      }
-    }
-    const commandPanelDom = commandPanelDoms[line];
-    // console.log('commandPanelDom==> ', commandPanelDoms.length, commandPanelDom);
-    if (commandPanelDom) { 
-      commandPanelDom.className = "commands show";
-    }
-    return
-  }
-  function addCommand(line:number, command:string) {
-    console.log('addCommand==> ', line, command);
-    const commandPanelDoms = document.querySelectorAll(".commands");
-    const commandPanelDom = commandPanelDoms[line];
-    if (commandPanelDom) {
-      commandPanelDom.className = "commands hide";
-    }
-
-    renderText(editor, command, line);
-
-    return
-  }
   // 构建 vnode
   const { list = [] } = elem as TextCommandElement
 
@@ -90,7 +81,7 @@ function renderTextCommand(elem: SlateElement, children: VNode[] | null, editor:
       'li',
       {
         on: {
-          click: () => addCommand(path[0], list[i].command)
+          click: () => addCommand(editor, path[0], list[i].command)
         }
       },
       list[i].label
@@ -115,8 +106,7 @@ function renderTextCommand(elem: SlateElement, children: VNode[] | null, editor:
         contentEditable: false,
       },
       on: {
-        // mouseenter: () => showCommand(path[0])
-        click: () => showCommand(path[0])
+        click: () => showCommandPanel(path[0])
       }
     },
     '+'
@@ -135,16 +125,28 @@ function renderTextCommand(elem: SlateElement, children: VNode[] | null, editor:
   return vcommandNode
 }
 
-const renderTextCommandElemConf = {
+const renderTextCommandPanelElemConf = {
   type: 'textcommand',
-  renderElem: renderTextCommand,
+  renderElem: renderTextCommandPanel,
 }
 
 function renderTextLabel(elem: SlateElement, children: VNode[] | null, editor: IDomEditor): VNode { 
   // 构建 vnode
-  const { value = [] } = elem as TextLabelElement
+  const { value = '' } = elem as TextLabelElement
   const vlabelNode = h(
     'span.label',
+    {
+      props: {
+        contentEditable: false,
+      },
+      style: {
+        marginLeft: '3px',
+        marginRight: '3px',
+        backgroundColor: 'var(--w-e-textarea-slight-bg-color)',
+        borderRadius: '3px',
+        padding: '0 3px',
+      }
+    },
     value
   )
   return vlabelNode
@@ -156,6 +158,6 @@ const renderTextLabelElemConf = {
 }
 
 export {
-  renderTextCommandElemConf,
+  renderTextCommandPanelElemConf,
   renderTextLabelElemConf,
 }
