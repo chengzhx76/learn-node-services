@@ -82,16 +82,12 @@ function CustomUiEditor() {
   const [scene, setScene] = useState<string>("孙悟空大战白骨精");
 
   function addExpression(editor: IDomEditor, inputText: string) {
-    // console.log("====>addExpression");
     const { selection } = editor;
     if (editor && selection) {
       editor.restoreSelection();
 
       const node = SlateNode.get(editor, selection.anchor.path);
       const text = SlateNode.string(node);
-
-      console.log("text===>", text, inputText);
-
       if (text) {
         if (inputText === ":" || inputText === "：") {
           const isInclude = commkeys.some((commkey) => text.includes(commkey));
@@ -241,7 +237,9 @@ function CustomUiEditor() {
 
         renderText(_editor, text, i);
         renderExpression(_editor, line, i);
-        renderPlay(_editor, scene, line.sentence, i);
+        if (text) {
+          renderPlay(_editor, scene, line.sentence, i);
+        }
       }
       setTimeout(() => {
         initFinish = true;
@@ -301,6 +299,9 @@ function CustomUiEditor() {
     line: string,
     i: number
   ) {
+    if (!line) {
+      line = randomCode();
+    }
     const playNode: UiPlayElement = {
       type: "uiplay",
       sceneName: scene,
@@ -328,7 +329,7 @@ function CustomUiEditor() {
       sceneName: scene,
     },
     headers: {
-      Authorization: `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI2NjRjMDYzMGJhOGU4ZDI1MDJhZjUwMDEiLCJ1c2VybmFtZSI6ImNoZW5nZ2MiLCJpYXQiOjE3MTgxODU3ODQsImV4cCI6MTcxODI3MjE4NH0.s7XS_2yhjCzN27BcG8sv3Ql8b62-nL_vbhOvQTCbR4A`,
+      Authorization: `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI2NjRjMDYzMGJhOGU4ZDI1MDJhZjUwMDEiLCJ1c2VybmFtZSI6ImNoZW5nZ2MiLCJpYXQiOjE3MTg1ODk3NTUsImV4cCI6MTcxODY3NjE1NX0.tFT_dxOPSxqwCKlIfL2eCNwVvLFQ8tEorrkF-fJWUq4`,
     },
     showUploadList: false,
     onChange(info) {
@@ -370,11 +371,14 @@ function CustomUiEditor() {
           text,
           line,
         });
+        // console.log("=======scenes======>", expression, text, line, scenes);
       }
       let text = "";
       scenes.forEach((scene) => {
         if (scene.text) {
           text += `${scene.line}|${scene.expression}|${scene.text}\n`;
+        } else {
+          text += "||\n";
         }
       });
       // console.log("cheng.发送-scenes-text======> ", text);

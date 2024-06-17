@@ -7,10 +7,10 @@ import React, { useState } from "react";
 // import WebSocket from "./components/WebSocket";
 import CustomUiEditor from "./components/CustomUiEditor";
 import CustomCommandEditor from "./components/CustomCommandEditor";
-// import CustomTextEditor from "./components/CustomTextEditor";
+import CustomTextEditor from "./components/CustomTextEditor";
 
 function App() {
-  const [editorType, setEditorType] = useState<string>("ui");
+  const [editorType, setEditorType] = useState<string>("text");
 
   return (
     <>
@@ -18,11 +18,13 @@ function App() {
         <h3>切换编辑器类型</h3>
         <button onClick={() => setEditorType("ui")}>UI编辑器</button>
         <br />
+        <button onClick={() => setEditorType("comm")}>COMM编辑器</button>
+        <br />
         <button onClick={() => setEditorType("text")}>TEXT编辑器</button>
       </div>
       {editorType === "ui" && <CustomUiEditor />}
-      {editorType === "text" && <CustomCommandEditor />}
-      {/* <CustomTextEditor /> */}
+      {editorType === "comm" && <CustomCommandEditor />}
+      {editorType === "text" && <CustomTextEditor />}
       {/* <WebSocket /> */}
     </>
   );

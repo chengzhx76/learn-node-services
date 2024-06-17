@@ -15,6 +15,43 @@ import { debounce } from "../../util";
 // Boot.registerModule(commandeditorModule);
 
 const gameName = "cheng-t";
+const commands = [
+  {
+    icon: "/icon/intro.png",
+    command: "旁白",
+    label: "插入旁白",
+  },
+  {
+    icon: "/icon/figure.png",
+    command: "立绘图片",
+    label: "插入立绘图片",
+  },
+  {
+    icon: "/icon/bg.png",
+    command: "背景图片",
+    label: "插入背景图片",
+  },
+  {
+    icon: "/icon/bgm.png",
+    command: "背景音乐",
+    label: "插入背景音乐",
+  },
+  {
+    icon: "/icon/dialog.png",
+    command: "对话",
+    label: "插入对话",
+  },
+  {
+    icon: "/icon/callScene.png",
+    command: "切换转场",
+    label: "切换转场",
+  },
+  {
+    icon: "/icon/end.png",
+    command: "结束游戏",
+    label: "结束游戏",
+  },
+];
 
 let initFinish = false;
 function CustomCommandEditor() {
@@ -24,43 +61,6 @@ function CustomCommandEditor() {
   const [html, setHtml] = useState("");
   const [show, setShow] = useState(false);
   const [openMask, setOpenMask] = useState(false);
-  const commands = [
-    {
-      icon: "/icon/intro.png",
-      command: "旁白",
-      label: "插入旁白",
-    },
-    {
-      icon: "/icon/figure.png",
-      command: "立绘图片",
-      label: "插入立绘图片",
-    },
-    {
-      icon: "/icon/bg.png",
-      command: "背景图片",
-      label: "插入背景图片",
-    },
-    {
-      icon: "/icon/bgm.png",
-      command: "背景音乐",
-      label: "插入背景音乐",
-    },
-    {
-      icon: "/icon/dialog.png",
-      command: "对话",
-      label: "插入对话",
-    },
-    {
-      icon: "/icon/callScene.png",
-      command: "切换转场",
-      label: "切换转场",
-    },
-    {
-      icon: "/icon/end.png",
-      command: "结束游戏",
-      label: "结束游戏",
-    },
-  ];
 
   useEffect(() => {
     return () => {
@@ -131,7 +131,7 @@ function CustomCommandEditor() {
       sectionName: section,
     },
     headers: {
-      Authorization: `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI2NjRjMDYzMGJhOGU4ZDI1MDJhZjUwMDEiLCJ1c2VybmFtZSI6ImNoZW5nZ2MiLCJpYXQiOjE3MTgxODU3ODQsImV4cCI6MTcxODI3MjE4NH0.s7XS_2yhjCzN27BcG8sv3Ql8b62-nL_vbhOvQTCbR4A`,
+      Authorization: `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI2NjRjMDYzMGJhOGU4ZDI1MDJhZjUwMDEiLCJ1c2VybmFtZSI6ImNoZW5nZ2MiLCJpYXQiOjE3MTg1ODk3NTUsImV4cCI6MTcxODY3NjE1NX0.tFT_dxOPSxqwCKlIfL2eCNwVvLFQ8tEorrkF-fJWUq4`,
     },
     showUploadList: false,
     onChange(info) {
