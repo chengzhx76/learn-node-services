@@ -7,16 +7,6 @@ function getUiEditorConfig(editor: IDomEditor) {
   const { customEditotConfig } = EXTEND_CONF as IExtendConfig
   return customEditotConfig
 }
-
-const replaceLineText = (editor: IDomEditor, lineIndex:number, newText:string) => {
-  const path = [lineIndex, 2];
-  SlateTransforms.removeNodes(editor, { at: path });
-  SlateTransforms.insertText(editor, newText, { at: path });
-};
-
-const commands = ['旁白:', '立绘图片:', '结束游戏']
-const commandRegx = new RegExp(commands.join("|"), "gi");
-
 function withUiEditor<T extends IDomEditor>(editor: T): T {   // TS 语法
 
   const { isInline, isVoid, insertBreak, insertText } = editor

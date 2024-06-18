@@ -1,5 +1,5 @@
 import { h, VNode, VNodeChildren } from 'snabbdom'
-import { DomEditor, IDomEditor, SlateElement, SlateTransforms, SlateNode } from '@wangeditor/editor'
+import { DomEditor, IDomEditor, SlateElement, SlateTransforms, SlateNode, SlateRange } from '@wangeditor/editor'
 import { Location } from 'slate'
 import { TextCommandPanelElement, TextLabelElement } from './custom-types'
 
@@ -55,54 +55,18 @@ const getLineText = (editor: IDomEditor, line: number) => {
 
 function insertCommandText(editor: IDomEditor, text: string, line: number) {
   if (editor && editor.selection) {
-    const { selection } = editor;
-    
-    // const point = { path:[0, 0], offset:5 };
-    // const selection = { anchor: point, focus: point };
-    // SlateTransforms.select(editor, selection);
-    // SlateTransforms.setPoint(editor, { path: [0, 0] });
-    // const point = { path: [0, 2], offset: 5 };
     const currentText = getLineText(editor, line)
-    // console.log('=currentText==> ', currentText)
     if (currentText && commandRegx.test(currentText)) {
       const newText = currentText.replace(commandRegx, "");
-      // console.log('=replaceLineText==> ', newText)
       replaceLineText(editor, line, newText)
     }
     setTimeout(() => {
+      // const range = { anchor: { path, offset }, focus: { path, offset } };
+      // Transforms.select(editor, range);
       const point = { path: [line, 2], offset: 0 };
       SlateTransforms.select(editor, point);
       editor.insertText(text);
-    }, 200);
-
-    /* const { selection } = editor;
-    const linePath = selection.anchor.path;
-
-    const descendantNodes = SlateNode.descendants(editor, {
-      from: [linePath[0]],
-      to: [linePath[0]],
-      reverse: true,
-      pass: ([node]) => DomEditor.getNodeType(node) === "textlabel",
-    });
-
-    let removePath: Location = [];
-    for (const [node, path] of descendantNodes) {
-      const type = DomEditor.getNodeType(node);
-      if (type === "textlabel") {
-        removePath = path;
-        break;
-      }
-    }
-    if (removePath.length > 0) {
-      SlateTransforms.removeNodes(editor, { at: removePath });
-    }
-
-    const labelNode:TextLabelElement = {
-      type: "textlabel",
-      value: text,
-      children: [{ text: "" }],
-    };
-    editor.insertNode(labelNode); */
+    }, 0);
   }
 }
 
