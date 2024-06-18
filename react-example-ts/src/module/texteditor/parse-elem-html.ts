@@ -13,7 +13,7 @@ function textcommandPanelParseHtml(elem: DOMElement, children: SlateDescendant[]
   return {
     type: 'textcommand',
     list,
-    children: [{ text: '' }], // void node 必须有一个空白 text
+    children: [{ text: '' }],
   } as TextCommandPanelElement
 }
 
@@ -27,7 +27,7 @@ function textlabelParseHtml(elem: DOMElement, children: SlateDescendant[], edito
   return {
     type: 'textlabel',
     value,
-    children: [{ text: '' }], // void node 必须有一个空白 text
+    children: [{ text: '' }],
   } as TextLabelElement
 }
 

@@ -3,6 +3,7 @@ import "./style.css";
 
 import React, { useState, useRef, useEffect } from "react";
 import { Editor } from "@wangeditor/editor-for-react";
+import { debounce, throttle } from "lodash";
 import {
   IDomEditor,
   IEditorConfig,
@@ -52,13 +53,38 @@ function CustomTextEditor() {
     }, 500);
   };
 
+  const addCommandPanel = debounce(() => {
+    var editorDome = document.getElementById("text-editor");
+    editorDome?.querySelectorAll("p").forEach((line) => {
+      line.addEventListener("mouseover", () => {
+        const showIconDom = line.querySelector(".show-icon");
+        if (showIconDom) {
+          showIconDom.className = "show-icon";
+        }
+      });
+
+      line.addEventListener("mouseout", () => {
+        const showIconDom = line.querySelector(".show-icon");
+        if (showIconDom) {
+          showIconDom.className = "show-icon icon-hide";
+        }
+      });
+    });
+  }, 500);
+
   const handleChange = (_editor: IDomEditor) => {
     if (_editor == null) return;
+    addCommandPanel();
+  };
+  const insertText = () => {
+    if (editor == null) return;
+    editor.insertText("dd");
   };
 
   return (
     <>
       <div
+        id="text-editor"
         style={{
           border: "1px solid #ccc",
           zIndex: 100,
@@ -76,7 +102,7 @@ function CustomTextEditor() {
         />
       </div>
       <div style={{ marginTop: "15px" }}>{html}</div>
-      <button onClick={addTextCommandPanel}>insertTextCommand</button>
+      <button onClick={insertText}>insertText</button>
     </>
   );
 }

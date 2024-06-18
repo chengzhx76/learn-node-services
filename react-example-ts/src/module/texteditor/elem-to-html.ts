@@ -7,32 +7,36 @@ import { SlateElement } from '@wangeditor/editor'
 import { TextCommandPanelElement, TextLabelElement } from './custom-types'
 
 /*
-<div class="commands">
-  <li>插入旁白</li>
-  <li>插入立绘图片</li>
-  <li>插入背景图片</li>
-  <li>插入背景音乐</li>
-  <li>插入对话</li>
-  <li>切换转场</li>
-  <li>结束游戏</li>
-</div>
+
+<span class="command-panel">
+  <div class="show-panel">
+    <span class="icon-show">+</span>
+  </div>
+  <div class="commands">
+    <button class="command">插入旁白</button>
+    <button class="command">插入立绘图片</button>
+    <button class="command">插入背景图片</button>
+    <button class="command">插入对话</button>
+    <button class="command">结束游戏</button>
+  </div>
+</span>
 */
 // 生成 html 的函数
 function textcommandPanelToHtml(elem: SlateElement, childrenHtml: string): string {
   const { list = [] } = elem as TextCommandPanelElement
-  let lis = ''
+  let btns = ''
   for (let i = 0; i < list.length; i++) {
     const { label, command } = list[i]
-    lis += `<li>${label}</li>`
+    btns += `<button class="command">${label}</button>`
   }
   const listStr = encodeURIComponent(JSON.stringify(list))
-  const html = `<span class="command-panel" data-w-e-type="textcommand" data-list="${listStr}" data-w-e-is-void data-w-e-is-inline><span onClick="showCommand">+</span><ul class="commands">${lis}</ul></span>`
+  const html = `<span class="command-panel" data-w-e-type="textcommand" data-list="${listStr}" data-w-e-is-void data-w-e-is-inline><div class="show-panel"><span class="icon-show">+</span></div><div class="commands">${btns}</div></span>`
   return html
 }
 
 // 配置
 const textcommandPanelElemToHtmlConf = {
-  type: 'textcommand', // 节点 type ，重要！！！
+  type: 'textcommand',
   elemToHtml: textcommandPanelToHtml,
 }
 

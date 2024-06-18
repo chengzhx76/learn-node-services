@@ -5,7 +5,6 @@ import { TextCommandPanelElement, TextLabelElement } from './custom-types'
 
 const commands = ['旁白:', '立绘图片:', '结束游戏']
 const commandRegx = new RegExp(commands.join("|"), "gi");
-let isShowPanel = false;
 
 const replaceLineText = (editor: IDomEditor, lineIndex:number, newText:string) => {
   const path = [lineIndex, 2];
@@ -23,13 +22,8 @@ function showCommandPanel(line: number) {
     }
   }
   const commandPanelDom = commandPanelDoms[line];
-  if (commandPanelDom) {
-    if (isShowPanel) {
-      hideCommandPanel(line)
-    } else {
-      isShowPanel = true
-      commandPanelDom.className = "commands show";
-    }
+  if (commandPanelDom) { 
+    commandPanelDom.className = "commands show";
   }
 }
 
@@ -42,7 +36,6 @@ function hideCommandPanel(line: number) {
   const commandPanelDoms = document.querySelectorAll(".commands");
   const commandPanelDom = commandPanelDoms[line];
   if (commandPanelDom) {
-    isShowPanel = false
     commandPanelDom.className = "commands hide";
   }
 }
