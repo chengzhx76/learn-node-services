@@ -1,6 +1,6 @@
 import { IDomEditor, DomEditor, SlateTransforms, SlateEditor, SlateRange, SlateNode, SlateElement } from '@wangeditor/editor'
 import { IExtendConfig } from '../utils/interface'
-import { TextCommandElement } from "./custom-types";
+import { TextCommandPanelElement } from "./custom-types";
 
 function getUiEditorConfig(editor: IDomEditor) {
   const { EXTEND_CONF } = editor.getConfig()
@@ -14,7 +14,7 @@ function withUiEditor<T extends IDomEditor>(editor: T): T {   // TS 语法
   const newEditor = editor
 
   function insertTextCommand() {
-    const commandNode: TextCommandElement = {
+    const commandNode: TextCommandPanelElement = {
       type: "textcommand",
       list: [
         {
@@ -34,10 +34,7 @@ function withUiEditor<T extends IDomEditor>(editor: T): T {   // TS 语法
     };
 
     if (editor) {
-      editor.restoreSelection(); // 恢复选区
-      /* SlateTransforms.insertNodes(editor, commandNode, {
-        at: editor.selection?.anchor.path,
-      }); */
+      editor.restoreSelection();
       SlateTransforms.insertNodes(editor, commandNode, { at: editor.selection?.anchor.path });
     }
   }

@@ -5,7 +5,7 @@
 
 import { DOMElement } from '../utils/dom'
 import { IDomEditor, SlateDescendant, SlateElement } from '@wangeditor/editor'
-import { TextCommandElement, Command, TextLabelElement } from './custom-types'
+import { TextCommandPanelElement, Command, TextLabelElement } from './custom-types'
 
 function textcommandParseHtml(elem: DOMElement, children: SlateDescendant[], editor: IDomEditor): SlateElement {
   const listStr = elem.getAttribute('data-list') || ''
@@ -14,7 +14,7 @@ function textcommandParseHtml(elem: DOMElement, children: SlateDescendant[], edi
     type: 'textcommand',
     list,
     children: [{ text: '' }], // void node 必须有一个空白 text
-  } as TextCommandElement
+  } as TextCommandPanelElement
 }
 
 const textcommandParseHtmlConf = {

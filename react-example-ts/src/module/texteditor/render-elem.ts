@@ -1,7 +1,7 @@
 import { h, VNode, VNodeChildren } from 'snabbdom'
 import { DomEditor, IDomEditor, SlateElement, SlateTransforms, SlateNode } from '@wangeditor/editor'
 import { Location } from 'slate'
-import { TextCommandElement, TextLabelElement } from './custom-types'
+import { TextCommandPanelElement, TextLabelElement } from './custom-types'
 
 function showCommandPanel(line: number) { 
   console.log("showCommandPanel", line);
@@ -73,7 +73,7 @@ function renderTextCommandPanel(elem: SlateElement, children: VNode[] | null, ed
   console.log('renderTextCommand==> ', path);
   
   // 构建 vnode
-  const { list = [] } = elem as TextCommandElement
+  const { list = [] } = elem as TextCommandPanelElement
 
   const lis: VNodeChildren = []
   for (let i = 0; i < list.length; i++) {

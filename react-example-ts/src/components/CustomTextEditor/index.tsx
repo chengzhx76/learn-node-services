@@ -11,7 +11,7 @@ import {
   SlateEditor,
 } from "@wangeditor/editor";
 
-import texteditorModule, { TextCommandElement } from "../../module/texteditor";
+import texteditorModule, { commandPanelNode } from "../../module/texteditor";
 Boot.registerModule(texteditorModule);
 
 function CustomTextEditor() {
@@ -31,55 +31,9 @@ function CustomTextEditor() {
   };
 
   function addTextCommandPanel() {
-    const commandNode: TextCommandElement = {
-      type: "textcommand",
-      list: [
-        {
-          label: "插入旁白",
-          command: "旁白:",
-        },
-        {
-          label: "插入立绘图片",
-          command: "立绘图片:",
-        },
-        {
-          label: "结束游戏",
-          command: "结束游戏",
-        },
-      ],
-      children: [{ text: "" }],
-    };
-
     if (editorRef.current) {
-      editorRef.current.restoreSelection(); // 恢复选区
-      /* SlateTransforms.insertNodes(editor, commandNode, {
-        at: editor.selection?.anchor.path,
-      }); */
-      SlateTransforms.insertNodes(editorRef.current, commandNode);
-
-      /* SlateTransforms.move(editorRef.current, {
-        distance: 3,
-        unit: "word",
-        reverse: true,
-      }); */
-
-      /* const block = SlateEditor.above(editorRef.current, {
-        match: (n) => SlateEditor.isBlock(editorRef.current, n),
-      });
-
-      if (!block) return;
-
-      const [, blockPath] = block; */
-
-      /* const endBlockPath = SlateEditor.end(
-        editorRef.current,
-        editor.selection?.anchor.path
-      );
-      SlateTransforms.select(editorRef.current, endBlockPath); */
-
-      const end = SlateEditor.end(editorRef.current, []);
-      // SlateTransforms.select(editorRef.current, end);
-      editorRef.current.select(end);
+      editorRef.current.restoreSelection();
+      SlateTransforms.insertNodes(editorRef.current, commandPanelNode);
     }
   }
 

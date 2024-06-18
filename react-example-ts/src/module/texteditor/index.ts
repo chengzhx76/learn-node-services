@@ -9,6 +9,7 @@ import { textcommandElemToHtmlConf, textlabelElemToHtmlConf } from './elem-to-ht
 import { textcommandParseHtmlConf, textlabelParseHtmlConf } from './parse-elem-html'
 
 export * from './custom-types'
+export * from './command'
 
 const module: Partial<IModuleConf> = {
   editorPlugin: withUiEditor,

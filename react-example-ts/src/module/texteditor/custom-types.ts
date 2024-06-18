@@ -14,7 +14,7 @@ export type TextLabelElement = {
   children: EmptyText[]
 }
 
-export type TextCommandElement = {
+export type TextCommandPanelElement = {
   type: 'textcommand'
   list: Command[]
   children: EmptyText[]

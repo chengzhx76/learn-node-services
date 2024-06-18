@@ -4,7 +4,7 @@
  */
 
 import { SlateElement } from '@wangeditor/editor'
-import { TextCommandElement, TextLabelElement } from './custom-types'
+import { TextCommandPanelElement, TextLabelElement } from './custom-types'
 
 /*
 <div class="commands">
@@ -19,7 +19,7 @@ import { TextCommandElement, TextLabelElement } from './custom-types'
 */
 // 生成 html 的函数
 function textcommandToHtml(elem: SlateElement, childrenHtml: string): string {
-  const { list = [] } = elem as TextCommandElement
+  const { list = [] } = elem as TextCommandPanelElement
   let lis = ''
   for (let i = 0; i < list.length; i++) {
     const { label, command } = list[i]
