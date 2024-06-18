@@ -5,8 +5,8 @@
 import { IModuleConf } from '@wangeditor/editor'
 import withUiEditor from './plugin'
 import { renderTextCommandPanelElemConf, renderTextLabelElemConf } from './render-elem'
-import { textcommandElemToHtmlConf, textlabelElemToHtmlConf } from './elem-to-html'
-import { textcommandParseHtmlConf, textlabelParseHtmlConf } from './parse-elem-html'
+import { textcommandPanelElemToHtmlConf, textlabelElemToHtmlConf } from './elem-to-html'
+import { textcommandPanelParseHtmlConf, textlabelParseHtmlConf } from './parse-elem-html'
 
 export * from './custom-types'
 export * from './command'
@@ -14,8 +14,8 @@ export * from './command'
 const module: Partial<IModuleConf> = {
   editorPlugin: withUiEditor,
   renderElems: [renderTextCommandPanelElemConf, renderTextLabelElemConf],
-  elemsToHtml: [textcommandElemToHtmlConf, textlabelElemToHtmlConf],
-  parseElemsHtml: [textcommandParseHtmlConf, textlabelParseHtmlConf],
+  elemsToHtml: [textcommandPanelElemToHtmlConf, textlabelElemToHtmlConf],
+  parseElemsHtml: [textcommandPanelParseHtmlConf, textlabelParseHtmlConf],
 }
 
 export default module

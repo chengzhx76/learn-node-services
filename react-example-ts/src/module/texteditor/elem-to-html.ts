@@ -18,7 +18,7 @@ import { TextCommandPanelElement, TextLabelElement } from './custom-types'
 </div>
 */
 // 生成 html 的函数
-function textcommandToHtml(elem: SlateElement, childrenHtml: string): string {
+function textcommandPanelToHtml(elem: SlateElement, childrenHtml: string): string {
   const { list = [] } = elem as TextCommandPanelElement
   let lis = ''
   for (let i = 0; i < list.length; i++) {
@@ -31,9 +31,9 @@ function textcommandToHtml(elem: SlateElement, childrenHtml: string): string {
 }
 
 // 配置
-const textcommandElemToHtmlConf = {
+const textcommandPanelElemToHtmlConf = {
   type: 'textcommand', // 节点 type ，重要！！！
-  elemToHtml: textcommandToHtml,
+  elemToHtml: textcommandPanelToHtml,
 }
 
 // 生成 html 的函数
@@ -50,6 +50,6 @@ const textlabelElemToHtmlConf = {
 }
 
 export {
-  textcommandElemToHtmlConf,
+  textcommandPanelElemToHtmlConf,
   textlabelElemToHtmlConf,
 }
