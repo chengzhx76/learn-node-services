@@ -53,7 +53,7 @@ function CustomTextEditor() {
     }, 500);
   };
 
-  const addCommandPanel = debounce(() => {
+  const addShowCommandPanelEvent = debounce(() => {
     var editorDome = document.getElementById("text-editor");
     editorDome?.querySelectorAll("p").forEach((line) => {
       line.addEventListener("mouseover", () => {
@@ -74,7 +74,7 @@ function CustomTextEditor() {
 
   const handleChange = (_editor: IDomEditor) => {
     if (_editor == null) return;
-    addCommandPanel();
+    addShowCommandPanelEvent();
   };
   const insertText = () => {
     if (editor == null) return;

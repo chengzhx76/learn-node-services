@@ -1,45 +1,59 @@
-import { IDomEditor } from '@wangeditor/editor'
+import { IDomEditor, DomEditor, SlateTransforms, SlateEditor, SlateRange, SlateNode, SlateElement } from '@wangeditor/editor'
 import { IExtendConfig } from '../utils/interface'
+import { TextCommandPanelElement } from "./custom-types";
+import { commands } from "./command";
 
-function getCommandEditorConfig(editor: IDomEditor) {
+function getUiEditorConfig(editor: IDomEditor) {
   const { EXTEND_CONF } = editor.getConfig()
   const { customEditotConfig } = EXTEND_CONF as IExtendConfig
   return customEditotConfig
 }
-
 function withUiEditor<T extends IDomEditor>(editor: T): T {   // TS 语法
 
-  const { insertText, deleteBackward, insertBreak } = editor;
-  const newEditor = editor;
+  const { isInline, isVoid, insertBreak, insertNode } = editor
+  const newEditor = editor
 
-  newEditor.insertText = t => {
-    insertText(t);
-    // const { putTextEditorText } = getCommandEditorConfig(newEditor);
-    /* const extend = getCommandEditorConfig(newEditor);
-    if (extend && extend.putTextEditorText) { 
-      extend.putTextEditorText();
-    } */
-  };
+  function insertTextCommand() {
+    if (editor) {
+      editor.restoreSelection();
+      const commandNode: TextCommandPanelElement = {
+        type: "textcommand",
+        list: commands,
+        children: [{ text: "" }],
+      };
+      SlateTransforms.insertNodes(editor, commandNode, { at: editor.selection?.anchor.path });
+    }
+  }
 
-  newEditor.deleteBackward = (unit) => {
-    deleteBackward(unit);
-    // const { putTextEditorText } = getCommandEditorConfig(newEditor);
-    /* const extend = getCommandEditorConfig(newEditor);
-    if (extend && extend.putTextEditorText) {
-      extend.putTextEditorText();
-    } */
-  };
-
-  newEditor.insertBreak = () => {
+  newEditor.insertBreak = () => { 
     insertBreak();
-    // const { putTextEditorText } = getCommandEditorConfig(newEditor);
-    /* const extend = getCommandEditorConfig(newEditor);
-    if (extend && extend.putTextEditorText) { 
-      extend.putTextEditorText();
-    } */
-  };
+    setTimeout(() => { 
+      insertTextCommand()
+    }, 100)
+  }
 
-  return editor;
+  newEditor.insertNode = (node) => {
+    console.log('======');
+    return insertNode(node);
+  }
+
+
+  newEditor.isInline = elem => {
+    const type = DomEditor.getNodeType(elem)
+    if (type === 'textcommand' || type === 'textlabel') {
+      return true
+    }
+    return isInline(elem)
+  }
+
+  newEditor.isVoid = elem => {
+    const type = DomEditor.getNodeType(elem)
+    if (type === 'textcommand' || type === 'textlabel') {
+      return true
+    }
+    return isVoid(elem)
+  }
+  return editor
 }
 
 export default withUiEditor

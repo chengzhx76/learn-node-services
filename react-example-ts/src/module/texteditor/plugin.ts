@@ -1,6 +1,7 @@
 import { IDomEditor, DomEditor, SlateTransforms, SlateEditor, SlateRange, SlateNode, SlateElement } from '@wangeditor/editor'
 import { IExtendConfig } from '../utils/interface'
 import { TextCommandPanelElement } from "./custom-types";
+import { commands } from "./command";
 
 function getUiEditorConfig(editor: IDomEditor) {
   const { EXTEND_CONF } = editor.getConfig()
@@ -17,20 +18,7 @@ function withUiEditor<T extends IDomEditor>(editor: T): T {   // TS 语法
       editor.restoreSelection();
       const commandNode: TextCommandPanelElement = {
         type: "textcommand",
-        list: [
-          {
-            label: "插入旁白",
-            command: "旁白:",
-          },
-          {
-            label: "插入立绘图片",
-            command: "立绘图片:",
-          },
-          {
-            label: "结束游戏",
-            command: "结束游戏",
-          },
-        ],
+        list: commands,
         children: [{ text: "" }],
       };
       SlateTransforms.insertNodes(editor, commandNode, { at: editor.selection?.anchor.path });
@@ -38,10 +26,10 @@ function withUiEditor<T extends IDomEditor>(editor: T): T {   // TS 语法
   }
 
   newEditor.insertBreak = () => { 
-    insertBreak();
     setTimeout(() => { 
       insertTextCommand()
     }, 100)
+    insertBreak();
   }
 
 

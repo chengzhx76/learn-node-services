@@ -17,16 +17,9 @@ import request from "../../util/request";
 import { debounce } from "lodash";
 
 import commandeditorModule, {
-  commands,
-  TextCommandPanelElement,
+  commandPanelNode,
 } from "../../module/commandeditor";
 Boot.registerModule(commandeditorModule);
-
-const commandPanelNode: TextCommandPanelElement = {
-  type: "textcommand",
-  list: commands,
-  children: [{ text: "" }],
-};
 
 const gameName = "cheng-t";
 
@@ -76,13 +69,13 @@ function CustomCommandEditor() {
         editorRef.current.clear();
 
         let html = "";
-        let lin = 0;
         for (const line of data.texts) {
           html += `<p>${line.desc}</p>`;
-          lin++;
         }
         if (html) {
-          setHtml(html);
+          setTimeout(() => {
+            setHtml(html);
+          }, 100);
         }
       }
       setTimeout(() => {
@@ -108,7 +101,7 @@ function CustomCommandEditor() {
       sectionName: section,
     },
     headers: {
-      Authorization: `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI2NjRjMDYzMGJhOGU4ZDI1MDJhZjUwMDEiLCJ1c2VybmFtZSI6ImNoZW5nZ2MiLCJpYXQiOjE3MTg3NzY0MzUsImV4cCI6MTcxODg2MjgzNX0.eT4Lywx4Mkgf8PGrNTdSY3afYQlLkJAfRI_3t-LQyxk`,
+      Authorization: `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI2NjRjMDYzMGJhOGU4ZDI1MDJhZjUwMDEiLCJ1c2VybmFtZSI6ImNoZW5nZ2MiLCJpYXQiOjE3MTg1ODk3NTUsImV4cCI6MTcxODY3NjE1NX0.tFT_dxOPSxqwCKlIfL2eCNwVvLFQ8tEorrkF-fJWUq4`,
     },
     showUploadList: false,
     onChange(info) {
@@ -158,29 +151,14 @@ function CustomCommandEditor() {
     });
   }, 800);
 
-  const renderCommandPanel = () => {
+  function addTextCommandPanel() {
     if (editorRef.current) {
       editorRef.current.restoreSelection();
-      const totalLine = editorRef.current.children.length;
-      console.log("========totalLine===> ", totalLine);
-      for (let i = 0; i < totalLine; i++) {
-        SlateTransforms.insertNodes(editorRef.current, commandPanelNode, {
-          at: [i, 0],
-        });
-      }
-    }
-  };
-
-  function addTextCommandPanel(line: number) {
-    if (editorRef.current) {
-      editorRef.current.restoreSelection();
-      SlateTransforms.insertNodes(editorRef.current, commandPanelNode, {
-        at: [line, 0],
-      });
+      SlateTransforms.insertNodes(editorRef.current, commandPanelNode);
     }
   }
 
-  const addShowCommandPanelEvent = debounce(() => {
+  const addCommandPanel = debounce(() => {
     var editorDome = document.getElementById("text-editor");
     editorDome?.querySelectorAll("p").forEach((line) => {
       line.addEventListener("mouseover", () => {
@@ -217,12 +195,19 @@ function CustomCommandEditor() {
     setHtml(html);
   };
 
+  function insertCommand(command: string) {
+    if (editorRef.current) {
+      editorRef.current.restoreSelection();
+      if (command !== "结束游戏") {
+        command += ":";
+      }
+      editorRef.current.insertText(command);
+    }
+  }
+
   // 编辑器配置
   const editorConfig: Partial<IEditorConfig> = {
     placeholder: "请输入内容...",
-    EXTEND_CONF: {
-      customEditotConfig: {},
-    },
   };
 
   const handleCreated = (_editor: IDomEditor) => {
@@ -230,14 +215,13 @@ function CustomCommandEditor() {
     setEditor(_editor);
     editorRef.current = _editor;
     setTimeout(() => {
-      addTextCommandPanel(0);
-      // renderCommandPanel();
+      addTextCommandPanel();
     }, 500);
   };
 
   const handleChange = (_editor: IDomEditor) => {
     if (_editor == null) return;
-    addShowCommandPanelEvent();
+    addCommandPanel();
     if (initFinish) {
       putTextEditorText();
     }
@@ -263,7 +247,34 @@ function CustomCommandEditor() {
 
       {/* {中间区域} */}
       <div className="main-content">
-        <div id="text-editor" className="editor">
+        <div className="editor">
+          <div className="add-command">
+            <div className="add-icon" onClick={() => setShow(!show)}>
+              <img className="img" src="/icon/add.png" alt="icon" />
+            </div>
+            {show && (
+              <>
+                {/* <div className="mask" onClick={() => setShow(false)}></div> */}
+                <div className="panel">
+                  {commands.map((command, index) => (
+                    <div
+                      className="cell"
+                      key={index}
+                      onClick={() => setShow(false)}
+                    >
+                      <img className="icon" src={command.icon} alt="icon" />
+                      <div
+                        className="command"
+                        onClick={() => insertCommand(command.command)}
+                      >
+                        {command.label}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </>
+            )}
+          </div>
           <Editor
             defaultConfig={editorConfig}
             value={html}

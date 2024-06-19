@@ -78,18 +78,51 @@ function CustomCommandEditor() {
         let html = "";
         let lin = 0;
         for (const line of data.texts) {
-          html += `<p>${line.desc}</p>`;
+          // html += `<p>${line.desc}</p>`;
+          renderLine(editorRef.current, line.desc, lin);
+          // renderText(editorRef.current, line.desc, lin);
           lin++;
         }
-        if (html) {
-          setHtml(html);
-        }
+        /* setTimeout(() => {
+          renderCommandPanel();
+        }, 1000); */
+        /* if (html) {
+          setTimeout(() => {
+            setHtml(html);
+            setTimeout(() => {
+              // renderCommandPanel();
+            }, 1000);
+          }, 100);
+        } */
       }
       setTimeout(() => {
         initFinish = true;
       }, 300);
       setOpenMask(false);
     });
+  }
+
+  function renderText(editor: IDomEditor, text: string, i: number) {
+    const p = { type: "paragraph", children: [{ text: text }] };
+    SlateTransforms.insertNodes(editor, p, {
+      at: [i],
+      mode: "highest",
+    });
+  }
+
+  function renderLine(editor: IDomEditor, text: string, i: number) {
+    if (editorRef.current) {
+      editorRef.current.restoreSelection();
+      const p = { type: "paragraph", children: [{ text: text }] };
+      SlateTransforms.insertNodes(editorRef.current, p, {
+        at: [i],
+      });
+      setTimeout((i: number) => {
+        SlateTransforms.insertNodes(editor, commandPanelNode, {
+          at: [i],
+        });
+      }, 1000);
+    }
   }
 
   // 清空内容
@@ -158,12 +191,19 @@ function CustomCommandEditor() {
     });
   }, 800);
 
+  const getLineCount = () => {
+    if (editorRef.current) {
+      const totalLine = editorRef.current.children.length;
+      console.log("========totalLine===> ", totalLine);
+    }
+  };
+
   const renderCommandPanel = () => {
     if (editorRef.current) {
       editorRef.current.restoreSelection();
       const totalLine = editorRef.current.children.length;
       console.log("========totalLine===> ", totalLine);
-      for (let i = 0; i < totalLine; i++) {
+      for (let i = 1; i < totalLine; i++) {
         SlateTransforms.insertNodes(editorRef.current, commandPanelNode, {
           at: [i, 0],
         });
@@ -231,7 +271,6 @@ function CustomCommandEditor() {
     editorRef.current = _editor;
     setTimeout(() => {
       addTextCommandPanel(0);
-      // renderCommandPanel();
     }, 500);
   };
 
@@ -254,6 +293,10 @@ function CustomCommandEditor() {
         <button onClick={undoText}>撤销</button>
         <br />
         <button onClick={redoText}>重做</button>
+        <br />
+        <button onClick={getLineCount}>getLineCount </button>
+        <br />
+        <button onClick={renderCommandPanel}>renderCommandPanel </button>
         <br />
         <Upload {...uploadText} className="uploadtxt">
           <button>上传txt</button>

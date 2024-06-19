@@ -10,7 +10,7 @@ import CustomCommandEditor from "./components/CustomCommandEditor";
 import CustomTextEditor from "./components/CustomTextEditor";
 
 function App() {
-  const [editorType, setEditorType] = useState<string>("text");
+  const [editorType, setEditorType] = useState<string>("comm");
 
   return (
     <>
@@ -20,11 +20,11 @@ function App() {
         <br />
         <button onClick={() => setEditorType("comm")}>COMM编辑器</button>
         <br />
-        <button onClick={() => setEditorType("text")}>TEXT编辑器</button>
+        {/* <button onClick={() => setEditorType("text")}>TEXT编辑器</button> */}
       </div>
       {editorType === "ui" && <CustomUiEditor />}
       {editorType === "comm" && <CustomCommandEditor />}
-      {editorType === "text" && <CustomTextEditor />}
+      {/* {editorType === "text" && <CustomTextEditor />} */}
       {/* <WebSocket /> */}
     </>
   );
