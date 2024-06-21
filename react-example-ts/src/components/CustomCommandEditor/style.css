@@ -1,43 +1,38 @@
-/*
-<span class="command-panel">
-  <div class="show-panel">
-    <span class="icon-show">+</span>
-  </div>
-  <div class="commands">
-    <button class="command">插入旁白</button>
-    <button class="command">插入立绘图片</button>
-    <button class="command">插入背景图片</button>
-    <button class="command">插入对话</button>
-    <button class="command">结束游戏</button>
-  </div>
-</span>
-*/
-
 .command-panel {
-  margin-left: 1px;
-  margin-right: 3px;
-  padding: 0 3px;
-  display: inline-block;
+  width: 200px;
+  background: red;
   position: relative;
 }
 
 .show-panel {
   width: 20px;
   height: 20px;
-  cursor: pointer;
   display: inline-block;
   font-size: 18px;
   font-weight: bold;
   color: #fff;
 }
 
-.show-icon {
-  height: 100%;
+.show-btn {
+  width: 20px;
+  height: 20px;
+  display: inline-block;
+  position: absolute;
+  top: 0;
+  left: -30px;
+}
+
+.show-btn .icon-img {
   width: 100%;
+  height: 100%;
+  cursor: pointer !important;
   line-height: 17px;
   border-radius: 20px;
   vertical-align: middle;
   box-sizing: border-box;
+  font-size: 18px;
+  color: #fff;
+  font-weight: bold;
   text-align: center;
   display: inline-block;
   background-color: #686D76;
@@ -45,29 +40,53 @@
 
 .commands {
   position: absolute;
-  left: -120px;
-  z-index: 9999;
-  top: 0;
-  width: 120px;
-  padding: 6px 0;
-  padding-left: 10px;
-  background: #808836;
-  border-radius: 6px;
+  top: 25px;
+  left: -162px;
+  background: #FFFFFF;
+  box-shadow: 0 0 #0000, 0 0 #0000, 0px 0.8px 2px rgba(0, 0, 0, .032), 0px 2.7px 6.7px rgba(0, 0, 0, .048), 0px 12px 30px rgba(0, 0, 0, .08);
+  border-radius: 10px;
+  padding: 8px;
+  z-index: 999;
 }
 
 .commands .command {
-  list-style: none;
-  font-size: 16px;
-  padding: 5px 0;
-  color: #fff;
+  width: 100%;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  padding: 0;
+  cursor: pointer;
   border: none;
   font: inherit;
-  cursor: pointer;
+  color: inherit;
   background-color: transparent;
 }
 
+.commands .command .icon {
+  width: 18px;
+  height: 18px;
+  display: inline-block;
+  padding: 10px 0;
+  margin: 0 8px;
+}
+.commands .command .label {
+  width: calc(100% - 18px);
+  padding: 10px 0;
+  padding-right: 8px;
+  margin-right: 8px;
+  border-bottom: 1px solid #ccc;
+  font-size: 14px;
+  color: #000;
+  text-align: left;
+  display: inline-block;
+}
+
+.commands .command:last-child .label {
+  border-bottom: none;
+}
+
 .hide {
-  display: none;
+  display: none !important;
 }
 
 .show {
@@ -76,8 +95,4 @@
 
 .w-e-scroll {
   overflow-y: visible !important;
-}
-
-.icon-hide {
-  display: none;
 }

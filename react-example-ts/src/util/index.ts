@@ -1,3 +1,5 @@
+import CryptoJS from "crypto-js";
+
 export function throttle<T extends Function>(func: T, wait = 500): (...args: any[]) => void {
   let timeout: ReturnType<typeof setTimeout> | null;
   return function throttled(this: any, ...args: any[]) {
@@ -23,3 +25,8 @@ export const debounce = <T extends (...args: any[]) => any>(fn: T, ms = 300):Deb
 export const randomCode = () => {
   return (Math.random() * 100000).toString(16).replace(".", "d");
 }
+
+export const calculateHash = (text:string) => {
+  const hash = CryptoJS.SHA256(text).toString(CryptoJS.enc.Hex);
+  return hash;
+};

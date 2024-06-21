@@ -8,6 +8,7 @@ import React, { useState } from "react";
 import CustomUiEditor from "./components/CustomUiEditor";
 import CustomCommandEditor from "./components/CustomCommandEditor";
 import CustomTextEditor from "./components/CustomTextEditor";
+import CustomPanelEditor from "./components/CustomPanelEditor";
 
 function App() {
   const [editorType, setEditorType] = useState<string>("comm");
@@ -24,6 +25,7 @@ function App() {
       </div>
       {editorType === "ui" && <CustomUiEditor />}
       {editorType === "comm" && <CustomCommandEditor />}
+      {/* {editorType === "panel" && <CustomPanelEditor />} */}
       {/* {editorType === "text" && <CustomTextEditor />} */}
       {/* <WebSocket /> */}
     </>

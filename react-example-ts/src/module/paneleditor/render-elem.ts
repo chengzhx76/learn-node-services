@@ -1,10 +1,11 @@
 import { h, VNode, VNodeChildren } from 'snabbdom'
 import { DomEditor, IDomEditor, SlateElement, SlateTransforms, SlateNode, SlateRange } from '@wangeditor/editor'
+import { Location } from 'slate'
 import { IExtendConfig } from '../utils/interface'
 import { TextCommandPanelElement } from './custom-types'
+import { commands } from './command'
 
-const commandRegx = new RegExp(['旁白:', '黑屏文字:', '立绘图片:', '背景图片:', '背景音乐:', '对话:', '切换转场:', '结束游戏'].join("|"), "gi");
-let isShowPanel = false;
+const commandRegx = new RegExp(['旁白:', '立绘图片:', '背景图片:', '背景音乐:', '对话:', '切换转场:', '结束游戏'].join("|"), "gi");
 function getTextEditorConfig(editor: IDomEditor) {
   const { EXTEND_CONF } = editor.getConfig()
   const { customEditotConfig } = EXTEND_CONF as IExtendConfig
@@ -17,10 +18,40 @@ const replaceLineText = (editor: IDomEditor, lineIndex:number, newText:string) =
   SlateTransforms.insertText(editor, newText, { at: path });
 };
 
+
+const commandPanelNode: TextCommandPanelElement = {
+  type: "textcommand",
+  list: commands,
+  children: [{ text: "" }],
+};
+
+function getCommandPanelLocation(editor: IDomEditor, line: number, nodeType:string): Location | undefined{
+  const descendantNodes = SlateNode.descendants(editor, {
+    from: [line],
+    to: [line],
+    reverse: true,
+    pass: ([node]) => DomEditor.getNodeType(node) === nodeType,
+  });
+  for (const [node, path] of descendantNodes) {
+    const type = DomEditor.getNodeType(node);
+    if (type === nodeType) {
+      return path;
+    }
+  }
+  return undefined
+}
+
 function showCommandPanel(editor: IDomEditor, line: number) {
 
   console.log("showCommandPanel", line);
 
+ /*  if (editor) {
+      editor.restoreSelection();
+      SlateTransforms.insertNodes(editor, commandShowPanelNode, {
+        at: [1, 0],
+      });
+  } */
+  
   // const extend = getTextEditorConfig(editor)
   // if (extend.taggleTextCommandPanel) extend.taggleTextCommandPanel(line)
 
@@ -38,23 +69,29 @@ function showCommandPanel(editor: IDomEditor, line: number) {
   // editor.insertNode(commandShowPanelNode);
 
 
-  const commandPanelDoms = document.querySelectorAll(".commands");
+  // SlateTransforms.setNodes(editor, { id: 'custom-class' }, { at: [line] });
+  /* const p = { type: "paragraph", children: [{ text: "程。。。" }] };
+  SlateTransforms.insertNodes(editor, p, {
+    at: [line],
+    mode: "highest",
+  }); */
+
+  /* const commandPanelDoms = document.querySelectorAll(".commands");
   for (let i = 0; i < commandPanelDoms.length; i++) {
     const commandPanelDom = commandPanelDoms[i];
     if (commandPanelDom.className.indexOf("show") > -1) {
       commandPanelDom.className = "commands hide";
     }
   }
-
   const commandPanelDom = commandPanelDoms[line];
   if (commandPanelDom) {
     if (isShowPanel) {
-      hideCommandPanel(editor, line)
+      hideCommandPanel(line)
     } else {
       isShowPanel = true
       commandPanelDom.className = "commands show";
     }
-  }
+  } */
 }
 
 function addCommand(editor: IDomEditor, line:number, command:string) {
@@ -66,7 +103,6 @@ function hideCommandPanel(editor: IDomEditor, line: number) {
   const commandPanelDoms = document.querySelectorAll(".commands");
   const commandPanelDom = commandPanelDoms[line];
   if (commandPanelDom) {
-    isShowPanel = false
     commandPanelDom.className = "commands hide";
   }
 }
@@ -96,92 +132,65 @@ function insertCommandText(editor: IDomEditor, text: string, line: number) {
 
 /*
 <span class="command-panel">
-  <span class="show-panel">+</span>
-  <div class="commands hide">
-    <button class="command">插入旁白</button>
-    <button class="command">插入立绘图片</button>
-    <button class="command">插入背景图片</button>
-    <button class="command">插入对话</button>
-    <button class="command">结束游戏</button>
-  </div>
+	<div class="show-btn">
+		<span class="icon-img">+</span>
+	</div>
+	<div class="commands hide">
+		<button class="command">${label}</button>
+	</div>
 </span>
 */
 
 function renderTextCommandPanel(elem: SlateElement, children: VNode[] | null, editor: IDomEditor): VNode {
+
   const path = DomEditor.findPath(editor, elem); 
-  
-  const viconImgNode = h(
-    'span.icon-img.hide',
-    {
-      props: {
-        contentEditable: false,
-      },
-      on: {
-        click: () => showCommandPanel(editor, path[0])
-      },
-    },
-    '+'
-  )
-  
-  const vshowBtnNode = h(
-    'div.show-btn',
-    {
-      props: {
-        contentEditable: false,
-      }
-    },
-    [viconImgNode]
-  )
 
-  // btn
-  
   const { list = [] } = elem as TextCommandPanelElement
-  const vcommandNodes: VNodeChildren = []
+  const vbtnNodes: VNodeChildren = []
   for (let i = 0; i < list.length; i++) {
-    const {icon, label, command} = list[i]
-    const viconNode = h(
-      'img.icon',
-      {
-        props: {
-          contentEditable: false,
-          src: icon,
-          alt: label
-        }
-      }
-    )
-    const vlabelNode = h(
-      'span.label',
-      {
-        props: {
-          contentEditable: false,
-        }
-      },
-      label
-    )
-
-    const vcommandNode = h(
+    const vbtnNode = h(
       'button.command',
       {
-        props: {
-          contentEditable: false,
-        },
         on: {
-          click: () => addCommand(editor, path[0], command)
+          click: () => addCommand(editor, path[0], list[i].command)
         }
       },
-      [viconNode, vlabelNode]
+      list[i].label
     )
-    vcommandNodes.push(vcommandNode)
+    vbtnNodes.push(vbtnNode)
   }
-
-  const vcommandsNode = h(
+  
+  const vcommandNode = h(
     'div.commands.hide',
     {
       props: {
         contentEditable: false,
       }
     },
-    vcommandNodes
+    vbtnNodes
+  )
+
+  const vshowIconNode = h(
+    'span.show-icon',
+    {
+      props: {
+        contentEditable: false,
+      },
+      on: {
+        // click: () => showCommandPanel(editor, path[0])
+      }
+    },
+    '+'
+  )
+
+  const vshowPanelNode = h(
+    'div.show-btn',
+    {
+      props: {
+        contentEditable: false,
+      }
+    },
+    [vshowIconNode]
   )
 
   const vcommandPanelNode = h(
@@ -191,7 +200,7 @@ function renderTextCommandPanel(elem: SlateElement, children: VNode[] | null, ed
         contentEditable: false,
       }
     },
-    [vshowBtnNode, vcommandsNode]
+    [vshowPanelNode, vcommandNode]
   )
 
   return vcommandPanelNode
@@ -201,6 +210,8 @@ const renderTextCommandPanelElemConf = {
   type: 'textcommand',
   renderElem: renderTextCommandPanel,
 }
+
+
 
 export {
   renderTextCommandPanelElemConf,

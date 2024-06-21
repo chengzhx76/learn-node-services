@@ -1,0 +1,83 @@
+/*
+<span class="command-panel">
+  <div class="show-panel">
+    <span class="icon-show">+</span>
+  </div>
+  <div class="commands">
+    <button class="command">插入旁白</button>
+    <button class="command">插入立绘图片</button>
+    <button class="command">插入背景图片</button>
+    <button class="command">插入对话</button>
+    <button class="command">结束游戏</button>
+  </div>
+</span>
+*/
+
+.command-panel {
+  margin-left: 1px;
+  margin-right: 3px;
+  padding: 0 3px;
+  display: inline-block;
+  position: relative;
+}
+
+.show-panel {
+  width: 20px;
+  height: 20px;
+  cursor: pointer;
+  display: inline-block;
+  font-size: 18px;
+  font-weight: bold;
+  color: #fff;
+}
+
+.show-icon {
+  height: 100%;
+  width: 100%;
+  line-height: 17px;
+  border-radius: 20px;
+  vertical-align: middle;
+  box-sizing: border-box;
+  text-align: center;
+  display: inline-block;
+  background-color: #686D76;
+}
+
+.commands {
+  position: absolute;
+  left: -120px;
+  z-index: 9999;
+  top: 0;
+  width: 120px;
+  padding: 6px 0;
+  padding-left: 10px;
+  background: #808836;
+  border-radius: 6px;
+}
+
+.commands .command {
+  list-style: none;
+  font-size: 16px;
+  padding: 5px 0;
+  color: #fff;
+  border: none;
+  font: inherit;
+  cursor: pointer;
+  background-color: transparent;
+}
+
+.hide {
+  display: none;
+}
+
+.show {
+  display: inline-block;
+}
+
+.w-e-scroll {
+  overflow-y: visible !important;
+}
+
+.icon-hide {
+  display: none;
+}

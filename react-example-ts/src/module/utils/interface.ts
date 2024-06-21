@@ -7,6 +7,6 @@ export interface IExtendConfig {
     selectUiExpression: (line:number, role:string, sxpression:string) => void
     playUiLine: (sceneName: string, line: string) => void
     // Text
-    addTextCommandPanel: () => void
+    taggleTextCommandPanel: (line:number) => void
   }
 }

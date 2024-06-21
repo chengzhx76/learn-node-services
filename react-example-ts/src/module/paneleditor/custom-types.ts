@@ -4,7 +4,6 @@ type EmptyText = {
 }
 
 export type Command = {
-  icon: string
   label: string
   command: string
 }

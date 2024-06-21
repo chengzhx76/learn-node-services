@@ -1,0 +1,137 @@
+import "@wangeditor/editor/dist/css/style.css"; // 引入 css
+
+import React, { useState, useEffect, useRef } from "react";
+import { Editor } from "@wangeditor/editor-for-react";
+import {
+  Boot,
+  IDomEditor,
+  IEditorConfig,
+  SlateTransforms,
+} from "@wangeditor/editor";
+import request from "../../util/request";
+
+import paneleditorModule, {
+  TextCommandPanelElement,
+  commands,
+} from "../../module/paneleditor";
+
+Boot.registerModule(paneleditorModule);
+
+const gameName = "cheng-t";
+
+const panelBtnNode: TextCommandPanelElement = {
+  type: "textcommand",
+  list: commands,
+  children: [{ text: "" }],
+};
+
+function PanelEditor() {
+  const [editor, setEditor] = useState<IDomEditor | null>(null);
+  const editorRef = useRef<IDomEditor | null>(null);
+  const [html, setHtml] = useState("");
+
+  function renderContent() {
+    const body = {
+      gameName: gameName,
+      sectionName: "text",
+      sceneType: "editor",
+    };
+
+    request.post("/api/editor/sceneDetail", body).then((resp: any) => {
+      const data = resp.data.data;
+      if (data && editorRef.current) {
+        editorRef.current.restoreSelection();
+        editorRef.current.clear();
+        renderScene(editorRef.current, data.texts);
+      }
+    });
+  }
+
+  function renderScene(_editor: IDomEditor, list: any) {
+    if (!_editor) {
+      return;
+    }
+    _editor.restoreSelection();
+    _editor.clear();
+    setTimeout(() => {
+      for (let i = 0; i < list.length; i++) {
+        const text = list[i].desc;
+
+        renderText(_editor, text, i);
+        renderPanelBtn(_editor, i);
+      }
+    }, 1000);
+  }
+
+  function renderText(_editor: IDomEditor, text: string, i: number) {
+    const p = { type: "paragraph", children: [{ text: text }] };
+    SlateTransforms.insertNodes(_editor, p, {
+      at: [i],
+      mode: "highest",
+    });
+  }
+
+  function renderPanelBtn(_editor: IDomEditor, i: number) {
+    const playNode: TextCommandPanelElement = {
+      type: "textcommand",
+      list: commands,
+      children: [{ text: "" }],
+    };
+    SlateTransforms.insertNodes(_editor, playNode, { at: [i, 0] });
+  }
+
+  const insertNode = (line: number) => {
+    if (editorRef.current) {
+      SlateTransforms.insertNodes(editorRef.current, panelBtnNode, {
+        at: [line, 0],
+      });
+    }
+  };
+
+  const onEditorCreated = (editor: IDomEditor) => {
+    setEditor(editor);
+    editorRef.current = editor;
+    renderContent();
+  };
+
+  const onEditorChange = (editor: IDomEditor) => {
+    // setHtml(editor.getHtml());
+  };
+
+  const editorConfig: Partial<IEditorConfig> = {
+    placeholder: "请输入内容...",
+    EXTEND_CONF: {
+      customEditotConfig: {},
+    },
+  };
+
+  useEffect(() => {
+    return () => {
+      if (editor == null) return;
+      editor.destroy();
+      setEditor(null);
+      if (editorRef.current == null) return;
+      editorRef.current.destroy();
+      editorRef.current = null;
+    };
+  }, [editor]);
+
+  return (
+    <>
+      <div style={{ border: "1px solid #ccc", zIndex: 100 }}>
+        <Editor
+          defaultConfig={editorConfig}
+          value={html}
+          onCreated={onEditorCreated}
+          onChange={onEditorChange}
+          mode="simple"
+          style={{ minHeight: "300px" }}
+        />
+      </div>
+      <div style={{ marginTop: "15px" }}>{html}</div>
+      <div onClick={() => insertNode(0)}>insertNode</div>
+    </>
+  );
+}
+
+export default PanelEditor;

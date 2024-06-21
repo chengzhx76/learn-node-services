@@ -1,8 +1,6 @@
-import "@wangeditor/editor/dist/css/style.css";
-import "./style.css";
-import "./layout.css";
+import "@wangeditor/editor/dist/css/style.css"; // 引入 css
 
-import { useState, useRef, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Editor } from "@wangeditor/editor-for-react";
 import {
   Boot,
@@ -12,22 +10,25 @@ import {
 } from "@wangeditor/editor";
 import type { UploadProps } from "antd";
 import { Upload } from "antd";
-import { debounce } from "lodash";
 
 import request from "../../util/request";
-import { calculateHash } from "../../util";
 
-import commandeditorModule, {
-  commands,
+import paneleditorModule, {
   TextCommandPanelElement,
-} from "../../module/commandeditor";
-Boot.registerModule(commandeditorModule);
+  commands,
+} from "../../module/paneleditor";
+
+Boot.registerModule(paneleditorModule);
 
 const gameName = "cheng-t";
-
 let initFinish = false;
-let textHash = "";
-function CustomCommandEditor() {
+
+const commandPanelNode: TextCommandPanelElement = {
+  type: "textcommand",
+  list: commands,
+  children: [{ text: "" }],
+};
+function PanelEditor() {
   const [section, setSection] = useState<string>("text");
   const [editor, setEditor] = useState<IDomEditor | null>(null);
   const editorRef = useRef<IDomEditor | null>(null);
@@ -71,48 +72,42 @@ function CustomCommandEditor() {
         editorRef.current.restoreSelection();
         editorRef.current.clear();
         renderScene(editorRef.current, data.texts);
+        /* let html = "";
+        let lin = 0;
+        for (const line of data.texts) {
+          html += `<p>${line.desc}</p>`;
+          lin++;
+        }
+        if (html) {
+          setHtml(html);
+        } */
       }
       setTimeout(() => {
         initFinish = true;
-        setOpenMask(false);
-        calculateTextHash();
       }, 300);
+      setOpenMask(false);
     });
   }
-
-  const calculateTextHash = () => {
-    setTimeout(() => {
-      if (!initFinish || editorRef.current == null) {
-        return;
-      }
-      const t = editorRef.current.getText();
-      if (!t) {
-        return;
-      }
-      textHash = calculateHash(t);
-    }, 1500);
-  };
 
   function renderScene(_editor: IDomEditor, list: any) {
     if (!_editor) {
       return;
     }
-    if (list.length > 0) {
+    _editor.restoreSelection();
+    _editor.clear();
+    setTimeout(() => {
       for (let i = 0; i < list.length; i++) {
         const line = list[i];
         let text = line.desc;
 
         renderText(_editor, text, i);
-        renderCommandPanel(_editor, i);
+        renderPanelBtn(_editor, i);
       }
-    } else {
-      renderCommandPanel(_editor, 0);
-    }
-    setTimeout(() => {
-      initFinish = true;
-      calculateTextHash();
+      setTimeout(() => {
+        initFinish = true;
+      }, 300);
       setOpenMask(false);
-    }, 300);
+    }, 1000);
   }
 
   function renderText(_editor: IDomEditor, text: string, i: number) {
@@ -123,22 +118,38 @@ function CustomCommandEditor() {
     });
   }
 
-  const renderCommandPanel = (_editor: IDomEditor, i: number) => {
-    const commandPanelNode: TextCommandPanelElement = {
+  function renderPanelBtn(_editor: IDomEditor, i: number) {
+    const playNode: TextCommandPanelElement = {
       type: "textcommand",
       list: commands,
       children: [{ text: "" }],
     };
-    SlateTransforms.insertNodes(_editor, commandPanelNode, {
-      at: [i, 0],
-    });
+    SlateTransforms.insertNodes(_editor, playNode, { at: [i, 0] });
+  }
+
+  const insertNode = (line: number) => {
+    if (editorRef.current) {
+      SlateTransforms.insertNodes(editorRef.current, commandPanelNode, {
+        at: [line, 0],
+      });
+    }
   };
 
-  // 清空内容
-  const clearRender = () => {
-    if (editorRef.current) {
-      setHtml("");
-    }
+  const handleCreated = (editor: IDomEditor) => {
+    setEditor(editor);
+    editorRef.current = editor;
+    renderContent();
+  };
+
+  const handleChange = (editor: IDomEditor) => {
+    // setHtml(editor.getHtml());
+  };
+
+  const editorConfig: Partial<IEditorConfig> = {
+    placeholder: "请输入内容...",
+    EXTEND_CONF: {
+      customEditotConfig: {},
+    },
   };
 
   const uploadText: UploadProps = {
@@ -150,7 +161,7 @@ function CustomCommandEditor() {
       sectionName: section,
     },
     headers: {
-      Authorization: `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI2NjRjMDYzMGJhOGU4ZDI1MDJhZjUwMDEiLCJ1c2VybmFtZSI6ImNoZW5nZ2MiLCJpYXQiOjE3MTg5NDA2MzQsImV4cCI6MTcxOTAyNzAzNH0.JooR667REU5bJrK9d9tx-Iubr1vVRjS9ILluWFF4tDI`,
+      Authorization: `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI2NjRjMDYzMGJhOGU4ZDI1MDJhZjUwMDEiLCJ1c2VybmFtZSI6ImNoZW5nZ2MiLCJpYXQiOjE3MTg3NzY0MzUsImV4cCI6MTcxODg2MjgzNX0.eT4Lywx4Mkgf8PGrNTdSY3afYQlLkJAfRI_3t-LQyxk`,
     },
     showUploadList: false,
     onChange(info) {
@@ -171,78 +182,45 @@ function CustomCommandEditor() {
           if (list && list.length === 0) {
             return;
           }
-
           editorRef.current.restoreSelection();
           editorRef.current.clear();
-
-          renderScene(editorRef.current, list.texts);
-          setTimeout(() => {
-            initFinish = true;
-            setOpenMask(false);
-          }, 200);
+          let html = "";
+          for (const line of list) {
+            html += `<p>${line.desc}</p>`;
+          }
+          if (html) {
+            setTimeout(() => {
+              setHtml(html);
+              initFinish = true;
+              setOpenMask(false);
+            }, 200);
+          }
         }
       }
     },
   };
 
-  const putTextEditorText = debounce(() => {
-    const body = {
-      gameName: gameName,
-      sectionName: section,
-      text: editorRef.current?.getText(),
+  useEffect(() => {
+    return () => {
+      if (editor == null) return;
+      editor.destroy();
+      setEditor(null);
+      if (editorRef.current == null) return;
+      editorRef.current.destroy();
+      editorRef.current = null;
     };
-    request.post("/api/editor/editTxtScene", body).then((resp: any) => {
-      // console.log('===保存场景内容==>', resp.data.data);
-    });
-  }, 800);
+  }, [editor]);
 
   function addTextCommandShowPanel(line: number) {
     if (editorRef.current) {
       editorRef.current.restoreSelection();
-      const commandPanelNode: TextCommandPanelElement = {
-        type: "textcommand",
-        list: commands,
-        children: [{ text: "" }],
-      };
       SlateTransforms.insertNodes(editorRef.current, commandPanelNode, {
         at: [line, 0],
       });
     }
   }
 
-  function taggleTextCommandPanel(line: number) {
-    console.log("=====taggleTextCommandPanel===>", line);
-  }
-
-  const addShowCommandPanelEvent = debounce(() => {
-    var editorDome = document.getElementById("text-editor");
-    editorDome?.querySelectorAll("p").forEach((line) => {
-      line.addEventListener("mouseover", () => {
-        const showIconDom = line.querySelector(".icon-img");
-        if (showIconDom) {
-          showIconDom.className = "icon-img";
-        }
-      });
-
-      line.addEventListener("mouseout", () => {
-        const showIconDom = line.querySelector(".icon-img");
-        if (showIconDom) {
-          showIconDom.className = "icon-img hide";
-        }
-      });
-    });
-  }, 500);
-
   const undoText = () => {
-    const t = editorRef.current?.getText();
-    let currentTextHash = "";
-    if (t) {
-      currentTextHash = calculateHash(t);
-      console.log(`Hash|${t} | ${textHash} | ${currentTextHash} `);
-    }
-    if (textHash === currentTextHash) {
-      return;
-    }
     if (editor != null && editor.undo) {
       editor.undo();
     }
@@ -258,30 +236,6 @@ function CustomCommandEditor() {
     if (editor == null) return;
     const html = `<p>我是html</p>`;
     setHtml(html);
-  };
-
-  // 编辑器配置
-  const editorConfig: Partial<IEditorConfig> = {
-    placeholder: "请输入内容...",
-    EXTEND_CONF: {
-      customEditotConfig: {
-        taggleTextCommandPanel,
-      },
-    },
-  };
-
-  const handleCreated = (_editor: IDomEditor) => {
-    if (_editor == null) return;
-    setEditor(_editor);
-    editorRef.current = _editor;
-  };
-
-  const handleChange = (_editor: IDomEditor) => {
-    if (_editor == null) return;
-    addShowCommandPanelEvent();
-    if (initFinish) {
-      putTextEditorText();
-    }
   };
 
   return (
@@ -333,10 +287,10 @@ function CustomCommandEditor() {
         <br />
         <button onClick={() => renderSection("text")}>渲染(text)</button>
         <br />
-        <button onClick={() => clearRender}>清空渲染</button>
+        {/* <button onClick={() => clearRender}>清空渲染</button> */}
       </div>
     </div>
   );
 }
 
-export default CustomCommandEditor;
+export default PanelEditor;
