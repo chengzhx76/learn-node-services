@@ -1,9 +1,18 @@
 .command-panel {
-  width: 200px;
-  background: red;
   position: relative;
 }
 
+/* .command-panel .mask {
+  position: fixed;
+  top: 0;
+  right: 0;
+  left: 0;
+  bottom: 0;
+  overflow: hidden;
+  z-index: 99;
+  background: rgba(0, 0, 0, .4);
+}
+ */
 .show-panel {
   width: 20px;
   height: 20px;
@@ -11,6 +20,7 @@
   font-size: 18px;
   font-weight: bold;
   color: #fff;
+  z-index: 66;
 }
 
 .show-btn {
@@ -20,6 +30,7 @@
   position: absolute;
   top: 0;
   left: -30px;
+  /* z-index: 99; */
 }
 
 .show-btn .icon-img {
@@ -38,18 +49,35 @@
   background-color: #686D76;
 }
 
-.commands {
+.panel {
+  width: 152px;
   position: absolute;
   top: 25px;
-  left: -162px;
-  background: #FFFFFF;
-  box-shadow: 0 0 #0000, 0 0 #0000, 0px 0.8px 2px rgba(0, 0, 0, .032), 0px 2.7px 6.7px rgba(0, 0, 0, .048), 0px 12px 30px rgba(0, 0, 0, .08);
-  border-radius: 10px;
-  padding: 8px;
-  z-index: 999;
+  left: -180px;
 }
 
-.commands .command {
+.panel .mask{
+    position: fixed;
+    top: 0;
+    right: 0;
+    left: 0;
+    bottom: 0;
+    overflow: hidden;
+    z-index: 88;
+    background: rgba(0, 0, 0, .4);
+}
+
+.panel .commands {
+  width: 100%;
+  padding: 8px;
+  border-radius: 10px;
+  box-shadow: 0 0 #0000, 0 0 #0000, 0px 0.8px 2px rgba(0, 0, 0, .032), 0px 2.7px 6.7px rgba(0, 0, 0, .048), 0px 12px 30px rgba(0, 0, 0, .08);
+  z-index: 99;
+  background: #FFFFFF;
+  position: relative;
+}
+
+.panel .commands .command {
   width: 100%;
   height: 40px;
   display: flex;
@@ -62,18 +90,16 @@
   background-color: transparent;
 }
 
-.commands .command .icon {
+.panel .commands .command .icon {
   width: 18px;
   height: 18px;
-  display: inline-block;
-  padding: 10px 0;
-  margin: 0 8px;
+  display: inline-block !important;
+  margin: 10px 8px;
 }
-.commands .command .label {
+.panel .commands .command .label {
   width: calc(100% - 18px);
   padding: 10px 0;
   padding-right: 8px;
-  margin-right: 8px;
   border-bottom: 1px solid #ccc;
   font-size: 14px;
   color: #000;
@@ -81,7 +107,7 @@
   display: inline-block;
 }
 
-.commands .command:last-child .label {
+.panel .commands .command:last-child .label {
   border-bottom: none;
 }
 

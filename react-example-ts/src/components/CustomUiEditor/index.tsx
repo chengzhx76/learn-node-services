@@ -378,7 +378,7 @@ function CustomUiEditor() {
         if (scene.text) {
           text += `${scene.line}|${scene.expression}|${scene.text}\n`;
         } else {
-          text += "||\n";
+          text += "\n";
         }
       });
       // console.log("cheng.发送-scenes-text======> ", text);
@@ -453,6 +453,7 @@ function CustomUiEditor() {
         selectUiExpression,
         playUiLine,
         putUiEditorText,
+        editorType: "ui",
       },
     },
   };

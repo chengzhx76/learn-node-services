@@ -1,0 +1,206 @@
+import { IDomEditor, DomEditor, SlateTransforms, SlateEditor, SlateRange, SlateNode, SlateElement } from '@wangeditor/editor'
+import { Path } from 'slate'
+import { IExtendConfig } from '../utils/interface'
+import { TextCommandPanelElement } from "./custom-types";
+import { commands } from './command'
+import { moveCommandPanel } from './dom'
+
+function getTextEditorConfig(editor: IDomEditor) {
+  const { EXTEND_CONF } = editor.getConfig()
+  const { customEditotConfig } = EXTEND_CONF as IExtendConfig
+  return customEditotConfig
+}
+
+function withUiEditor<T extends IDomEditor>(editor: T): T {   // TS 语法
+
+  const { isInline, isVoid, insertBreak, insertNode, deleteBackward } = editor
+  const newEditor = editor
+
+  function insertTextCommand() {
+    if (editor && editor.selection) {
+      const linePath = editor.selection.anchor.path
+      editor.restoreSelection();
+      const commandNode: TextCommandPanelElement = {
+        type: "textcommand",
+        list: commands,
+        children: [{ text: "" }],
+      };
+      SlateTransforms.insertNodes(editor, commandNode, { at: linePath });
+      setTimeout(() => { 
+        moveCommandPanel(linePath[0])
+      }, 300)
+    }
+  }
+
+  newEditor.insertBreak = () => { 
+    insertBreak();
+    const extend = getTextEditorConfig(editor);
+    if (extend.editorType && extend.editorType === 'text') {
+      setTimeout(() => { 
+        insertTextCommand()
+      }, 100)
+    }
+  }
+
+  newEditor.deleteBackward = unit => {
+    if (editor && editor.selection) { 
+      const linePath = editor.selection.anchor.path
+      const line = linePath[0]
+      const lineNode = SlateNode.get(editor, linePath);
+      const lineText = SlateNode.string(lineNode);
+      if (lineText.length !== 0) {
+        deleteBackward(unit)
+      } else {
+        if (line !== 0) {
+            SlateTransforms.removeNodes(editor, { at: [line] });
+            /* console.log('===>', Path.previous(linePath));
+            const preNode = SlateNode.get(editor, Path.previous(linePath));
+            if (DomEditor.checkNodeType(preNode, 'textcommand')) {
+              editor.restoreSelection();
+              SlateTransforms.removeNodes(editor, { at: linePath });
+              setTimeout(() => { 
+                removeCurrentLine(editor)
+              }, 1000)
+            } */
+          }
+      }
+
+      /* const currentLine = currentLinePath[0]
+      if (currentLineText.length === 0 && currentLine !== 0) {
+        const linePath = Path.previous(currentLinePath)
+        const lineNode = SlateNode.get(editor, linePath);
+        const type = DomEditor.getNodeType(lineNode)
+        if (type === 'textcommand') {
+          SlateTransforms.removeNodes(editor, { at: linePath });
+        }
+      } */
+
+      /* if (SlateNode.has(editor, linePath)) { 
+        const node = SlateNode.get(editor, linePath);
+        const type = DomEditor.getNodeType(node)
+        if (node) {
+          
+          console.log('node==>', node, type);
+        }
+      } */
+
+      /* const node = SlateNode.descendant(editor, [0, 0]);
+      if (SlateElement.isElement(node)) {
+        const _node = node as SlateNode
+        const type = DomEditor.getNodeType(_node);
+        console.log("====textcommand=====>", type);
+      } */
+
+      /* const descendantNodes = SlateNode.descendants(editor, {
+        from: [linePath[0]],
+        to: [linePath[0]],
+        reverse: true,
+        pass: ([node]) => DomEditor.checkNodeType(node, 'textcommand')
+      });
+      for (const [node, path] of descendantNodes) {
+        const type = DomEditor.getNodeType(node);
+        if (type === 'textcommand') {
+          console.log("====textcommand=====>", node, path);
+        }
+      } */
+
+      
+    }
+  }
+
+  newEditor.normalizeNode = ([node, path]) => { 
+    const type = DomEditor.getNodeType(node)
+
+    // console.log("normalizeNode==>", type);
+    if (type === 'textcommand') { 
+      /* SlateTransforms.unwrapNodes(editor, {
+        match: (n) => DomEditor.checkNodeType(n, 'textcommand'),
+        split: true,
+      }) */
+      // const parentPath = Path.parent(path);
+      // 获取父节点的父节点路径
+      // const grandParentPath = Path.parent(parentPath);
+      // 目标路径是父节点路径的下一个兄弟节点路径
+      // const targetPath = Path.next(parentPath);
+      // console.log(parentPath, grandParentPath, targetPath);
+      // SlateTransforms.moveNodes(editor, { at: path, to: targetPath });
+      // SlateTransforms.liftNodes(editor,  { match: n => DomEditor.checkNodeType(n, 'textcommand') })
+    }
+  }
+
+  newEditor.insertNode = (node) => {
+    return insertNode(node);
+  }
+
+
+  newEditor.isInline = elem => {
+    const type = DomEditor.getNodeType(elem)
+    if (type === 'textcommand') {
+      return true
+    }
+    return isInline(elem)
+  }
+
+  newEditor.isVoid = elem => {
+    const type = DomEditor.getNodeType(elem)
+    if (type === 'textcommand') {
+      return true
+    }
+    return isVoid(elem)
+  }
+  return editor
+}
+
+// 移动当前行的光标到上一行的行尾
+function moveCursorToEndOfPreviousLine(editor: IDomEditor) {
+  // 检查当前选择是否存在并且是一个范围
+  const { selection } = editor;
+  if (!selection || !SlateRange.isCollapsed(selection)) {
+    return;
+  }
+
+  // 获取当前光标位置
+  const { anchor } = selection;
+  const previousPoint = SlateEditor.before(editor, anchor, { unit: 'line' });
+
+  // 如果上一行存在
+  if (previousPoint) {
+    // 获取上一行的行尾位置
+    const endOfPreviousLine = SlateEditor.end(editor, {
+      path: previousPoint.path,
+      offset: previousPoint.offset,
+    });
+
+    // 将光标移到上一行的行尾
+    if (endOfPreviousLine) {
+      SlateTransforms.select(editor, {
+        anchor: endOfPreviousLine,
+        focus: endOfPreviousLine,
+      });
+    }
+  }
+}
+
+/* function removeCurrentLine(editor: IDomEditor) {
+  const { selection } = editor;
+
+  if (!selection || !SlateRange.isCollapsed(selection)) {
+    return;
+  }
+
+  const [currentNode, currentPath] = SlateEditor.node(editor, selection, { depth: 1 });
+
+  if (!currentNode) {
+    return;
+  }
+
+  // 获取当前行的路径
+  const currentLinePath = currentPath.slice(0, -1);
+
+  console.log('currentLinePath==>', currentLinePath);
+
+  // 移除当前行
+  SlateTransforms.removeNodes(editor, { at: [0] });
+} */
+
+export default withUiEditor

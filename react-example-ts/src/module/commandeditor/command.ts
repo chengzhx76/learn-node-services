@@ -36,3 +36,5 @@ export const commands = [
   },
 ];
 
+export const commandTexts = ['旁白:', '立绘图片:', '背景图片:', '背景音乐:', '对话:', '切换转场:', '结束游戏']
+export const commandLabels = ['插入旁白', '插入立绘图片', '插入背景图片', '插入背景音乐', '插入对话', '切换转场', '结束游戏']

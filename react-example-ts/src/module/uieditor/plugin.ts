@@ -28,7 +28,6 @@ function withUiEditor<T extends IDomEditor>(editor: T): T {   // TS 语法
       return;
     }
     
-    
     if (SlateNode.has(editor, selection.anchor.path)) { 
       const node = SlateNode.get(editor, selection.anchor.path);
       if (node) {
@@ -58,7 +57,6 @@ function withUiEditor<T extends IDomEditor>(editor: T): T {   // TS 语法
   }
   
   newEditor.deleteBackward = (unit) => {
-    console.log('======> deleteBackward', unit);
     const { selection } = editor;
     if (!selection) {
       deleteBackward(unit);
@@ -66,12 +64,8 @@ function withUiEditor<T extends IDomEditor>(editor: T): T {   // TS 语法
     }
     deleteBackward(unit);
 
-    let [selectionStart, selectionEnd] = SlateRange.edges(selection);
-    console.log('======> deleteBackward', selectionStart, selectionEnd);
-
-
-    const line = selection.anchor.path[0];
-    if (SlateNode.has(editor, selection.anchor.path)) {
+    const extend = getUiEditorConfig(editor);
+    if (extend.editorType && extend.editorType === 'ui' && SlateNode.has(editor, selection.anchor.path)) {
       const node = SlateNode.get(editor, selection.anchor.path);
       if (node) {
         const text = SlateNode.string(node);
@@ -80,6 +74,7 @@ function withUiEditor<T extends IDomEditor>(editor: T): T {   // TS 语法
           if (isInclude) {
             return;
           }
+          const line = selection.anchor.path[0];
           const preText = lineMap.get(line);
           if (preText) {
             if (containColon(preText) && !containColon(text)) {

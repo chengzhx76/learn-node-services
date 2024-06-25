@@ -7,7 +7,10 @@ import { Editor } from "@wangeditor/editor-for-react";
 import {
   Boot,
   IDomEditor,
+  SlateEditor,
+  SlateNode,
   IEditorConfig,
+  SlateDescendant,
   SlateTransforms,
 } from "@wangeditor/editor";
 import type { UploadProps } from "antd";
@@ -15,11 +18,16 @@ import { Upload } from "antd";
 import { debounce } from "lodash";
 
 import request from "../../util/request";
-import { calculateHash } from "../../util";
+import { calculateHash, randomCode } from "../../util";
 
 import commandeditorModule, {
   commands,
+  commandLabels,
+  addShowCommandPanelEvent,
+  tagglePlaceholder,
+  moveCommandPanel,
   TextCommandPanelElement,
+  TextPlayElement,
 } from "../../module/commandeditor";
 Boot.registerModule(commandeditorModule);
 
@@ -32,7 +40,6 @@ function CustomCommandEditor() {
   const [editor, setEditor] = useState<IDomEditor | null>(null);
   const editorRef = useRef<IDomEditor | null>(null);
   const [html, setHtml] = useState("");
-  const [show, setShow] = useState(false);
   const [openMask, setOpenMask] = useState(false);
 
   useEffect(() => {
@@ -75,23 +82,9 @@ function CustomCommandEditor() {
       setTimeout(() => {
         initFinish = true;
         setOpenMask(false);
-        calculateTextHash();
       }, 300);
     });
   }
-
-  const calculateTextHash = () => {
-    setTimeout(() => {
-      if (!initFinish || editorRef.current == null) {
-        return;
-      }
-      const t = editorRef.current.getText();
-      if (!t) {
-        return;
-      }
-      textHash = calculateHash(t);
-    }, 1500);
-  };
 
   function renderScene(_editor: IDomEditor, list: any) {
     if (!_editor) {
@@ -105,13 +98,14 @@ function CustomCommandEditor() {
         renderText(_editor, text, i);
         renderCommandPanel(_editor, i);
       }
+      renderCommandPanel(_editor, list.length);
     } else {
       renderCommandPanel(_editor, 0);
+      tagglePlaceholder(true);
     }
     setTimeout(() => {
-      initFinish = true;
+      moveCommandPanel();
       calculateTextHash();
-      setOpenMask(false);
     }, 300);
   }
 
@@ -134,6 +128,38 @@ function CustomCommandEditor() {
     });
   };
 
+  function renderPlayNode(_editor: IDomEditor, i: number) {
+    console.log("renderPlayNode===>");
+    const playNode: TextPlayElement = {
+      type: "textplay",
+      line: randomCode(),
+      sceneName: "section",
+      children: [{ text: "" }],
+    };
+    const commandPanelNode: TextCommandPanelElement = {
+      type: "textcommand",
+      list: commands,
+      children: [{ text: "" }],
+    };
+
+    SlateTransforms.insertNodes(_editor, [playNode, commandPanelNode], {
+      at: [i, 0],
+    });
+  }
+
+  const calculateTextHash = () => {
+    setTimeout(() => {
+      if (!initFinish || editorRef.current == null) {
+        return;
+      }
+      const t = editorRef.current.getText();
+      if (!t) {
+        return;
+      }
+      textHash = calculateHash(t);
+    }, 1500);
+  };
+
   // 清空内容
   const clearRender = () => {
     if (editorRef.current) {
@@ -150,7 +176,7 @@ function CustomCommandEditor() {
       sectionName: section,
     },
     headers: {
-      Authorization: `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI2NjRjMDYzMGJhOGU4ZDI1MDJhZjUwMDEiLCJ1c2VybmFtZSI6ImNoZW5nZ2MiLCJpYXQiOjE3MTg5NDA2MzQsImV4cCI6MTcxOTAyNzAzNH0.JooR667REU5bJrK9d9tx-Iubr1vVRjS9ILluWFF4tDI`,
+      Authorization: `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI2NjRjMDYzMGJhOGU4ZDI1MDJhZjUwMDEiLCJ1c2VybmFtZSI6ImNoZW5nZ2MiLCJpYXQiOjE3MTkyODE2MTYsImV4cCI6MTcxOTM2ODAxNn0.YyEfGhZdE1OmHc7M-8tH01TjFW4-B4V62YJIpf6y1kc`,
     },
     showUploadList: false,
     onChange(info) {
@@ -196,7 +222,21 @@ function CustomCommandEditor() {
     });
   }, 800);
 
-  function addTextCommandShowPanel(line: number) {
+  function playTextLine(sceneName: string, line: string) {
+    const body = {
+      gameName: gameName,
+      sectionName: section,
+      sceneName: sceneName,
+    };
+    request
+      .post(`/api/editor/scene/command/${line}`, body)
+      .then((resp: any) => {
+        const data = resp.data.data;
+        console.log("playTextLine===>", data);
+      });
+  }
+
+  /* function addTextCommandShowPanel(line: number) {
     if (editorRef.current) {
       editorRef.current.restoreSelection();
       const commandPanelNode: TextCommandPanelElement = {
@@ -208,30 +248,7 @@ function CustomCommandEditor() {
         at: [line, 0],
       });
     }
-  }
-
-  function taggleTextCommandPanel(line: number) {
-    console.log("=====taggleTextCommandPanel===>", line);
-  }
-
-  const addShowCommandPanelEvent = debounce(() => {
-    var editorDome = document.getElementById("text-editor");
-    editorDome?.querySelectorAll("p").forEach((line) => {
-      line.addEventListener("mouseover", () => {
-        const showIconDom = line.querySelector(".icon-img");
-        if (showIconDom) {
-          showIconDom.className = "icon-img";
-        }
-      });
-
-      line.addEventListener("mouseout", () => {
-        const showIconDom = line.querySelector(".icon-img");
-        if (showIconDom) {
-          showIconDom.className = "icon-img hide";
-        }
-      });
-    });
-  }, 500);
+  } */
 
   const undoText = () => {
     const t = editorRef.current?.getText();
@@ -260,14 +277,57 @@ function CustomCommandEditor() {
     setHtml(html);
   };
 
-  // 编辑器配置
-  const editorConfig: Partial<IEditorConfig> = {
-    placeholder: "请输入内容...",
-    EXTEND_CONF: {
-      customEditotConfig: {
-        taggleTextCommandPanel,
-      },
-    },
+  const handleCustomPaste = (
+    editor: IDomEditor,
+    event: ClipboardEvent
+  ): boolean => {
+    let data = event.clipboardData?.getData("text/plain");
+    const { selection } = editor;
+    if (data && editor && selection) {
+      editor.restoreSelection();
+      const linePath = selection.anchor.path;
+      const line = linePath[0];
+      const lineNode = SlateNode.get(editor, linePath);
+      const lineText = SlateNode.string(lineNode);
+      if (lineText) {
+        SlateTransforms.removeNodes(editor, { at: [line] });
+      }
+
+      const datas = data.split("\n");
+
+      const texts = [];
+      let insertLine = line;
+      for (let i = 0; i < datas.length; i++) {
+        let text = datas[i]?.trim();
+        if (i == 0 && lineText) {
+          text = lineText + text;
+        }
+        if (text && !commandLabels.includes(text) && text !== "+") {
+          texts.push({
+            desc: text,
+          });
+          renderText(editor, text, insertLine);
+          renderCommandPanel(editor, insertLine);
+          insertLine++;
+        }
+      }
+
+      let cursorLine = insertLine;
+      if (lineText) {
+        cursorLine--;
+      }
+      const endPoint = SlateEditor.end(editor, [cursorLine]);
+      SlateTransforms.select(editor, endPoint);
+
+      if (insertLine > line) {
+        setTimeout(() => {
+          moveCommandPanel();
+        }, 300);
+      }
+    }
+
+    event.preventDefault();
+    return false;
   };
 
   const handleCreated = (_editor: IDomEditor) => {
@@ -282,6 +342,21 @@ function CustomCommandEditor() {
     if (initFinish) {
       putTextEditorText();
     }
+    const t = _editor.getText();
+    // console.log("=====text change===>", t);
+    tagglePlaceholder(!t.trim());
+  };
+
+  // 编辑器配置
+  const editorConfig: Partial<IEditorConfig> = {
+    placeholder: "请输入内容...",
+    customPaste: handleCustomPaste,
+    EXTEND_CONF: {
+      customEditotConfig: {
+        playTextLine,
+        editorType: "text",
+      },
+    },
   };
 
   return (
@@ -296,9 +371,9 @@ function CustomCommandEditor() {
         <br />
         <button onClick={redoText}>重做</button>
         <br />
-        <button onClick={() => addTextCommandShowPanel(1)}>
+        {/* <button onClick={() => addTextCommandShowPanel(1)}>
           addTextCommandShowPanel
-        </button>
+        </button> */}
         <br />
         <Upload {...uploadText} className="uploadtxt">
           <button>上传txt</button>

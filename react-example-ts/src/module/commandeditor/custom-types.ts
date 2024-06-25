@@ -9,6 +9,13 @@ export type Command = {
   command: string
 }
 
+export type TextPlayElement = {
+  type: 'textplay'
+  line: string
+  sceneName: string
+  children: EmptyText[]
+}
+
 export type TextCommandPanelElement = {
   type: 'textcommand'
   list: Command[]

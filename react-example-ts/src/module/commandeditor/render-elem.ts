@@ -1,10 +1,11 @@
 import { h, VNode, VNodeChildren } from 'snabbdom'
 import { DomEditor, IDomEditor, SlateElement, SlateTransforms, SlateNode, SlateRange } from '@wangeditor/editor'
 import { IExtendConfig } from '../utils/interface'
-import { TextCommandPanelElement } from './custom-types'
+import { TextCommandPanelElement, TextPlayElement } from './custom-types'
+import { commandTexts } from './command'
+import { showCommandPanel, hideCommandPanel } from './dom'
 
-const commandRegx = new RegExp(['旁白:', '黑屏文字:', '立绘图片:', '背景图片:', '背景音乐:', '对话:', '切换转场:', '结束游戏'].join("|"), "gi");
-let isShowPanel = false;
+const commandRegx = new RegExp(commandTexts.join("|"), "gi");
 function getTextEditorConfig(editor: IDomEditor) {
   const { EXTEND_CONF } = editor.getConfig()
   const { customEditotConfig } = EXTEND_CONF as IExtendConfig
@@ -17,9 +18,7 @@ const replaceLineText = (editor: IDomEditor, lineIndex:number, newText:string) =
   SlateTransforms.insertText(editor, newText, { at: path });
 };
 
-function showCommandPanel(editor: IDomEditor, line: number) {
-
-  console.log("showCommandPanel", line);
+// function showCommandPanel(editor: IDomEditor, line: number) {
 
   // const extend = getTextEditorConfig(editor)
   // if (extend.taggleTextCommandPanel) extend.taggleTextCommandPanel(line)
@@ -38,38 +37,13 @@ function showCommandPanel(editor: IDomEditor, line: number) {
   // editor.insertNode(commandShowPanelNode);
 
 
-  const commandPanelDoms = document.querySelectorAll(".commands");
-  for (let i = 0; i < commandPanelDoms.length; i++) {
-    const commandPanelDom = commandPanelDoms[i];
-    if (commandPanelDom.className.indexOf("show") > -1) {
-      commandPanelDom.className = "commands hide";
-    }
-  }
+// }
 
-  const commandPanelDom = commandPanelDoms[line];
-  if (commandPanelDom) {
-    if (isShowPanel) {
-      hideCommandPanel(editor, line)
-    } else {
-      isShowPanel = true
-      commandPanelDom.className = "commands show";
-    }
-  }
-}
-
-function addCommand(editor: IDomEditor, line:number, command:string) {
-  hideCommandPanel(editor, line)
+function addCommand(editor: IDomEditor, line: number, command: string) {
+  hideCommandPanel(line)
   insertCommandText(editor, command, line);
 }
 
-function hideCommandPanel(editor: IDomEditor, line: number) { 
-  const commandPanelDoms = document.querySelectorAll(".commands");
-  const commandPanelDom = commandPanelDoms[line];
-  if (commandPanelDom) {
-    isShowPanel = false
-    commandPanelDom.className = "commands hide";
-  }
-}
 
 const getLineText = (editor: IDomEditor, line: number) => {
   const path = [line];
@@ -78,7 +52,7 @@ const getLineText = (editor: IDomEditor, line: number) => {
 };
 
 function insertCommandText(editor: IDomEditor, text: string, line: number) {
-  if (editor && editor.selection) {
+  if (editor) {
     const currentText = getLineText(editor, line)
     if (currentText && commandRegx.test(currentText)) {
       const newText = currentText.replace(commandRegx, "");
@@ -97,12 +71,15 @@ function insertCommandText(editor: IDomEditor, text: string, line: number) {
 /*
 <span class="command-panel">
   <span class="show-panel">+</span>
-  <div class="commands hide">
-    <button class="command">插入旁白</button>
-    <button class="command">插入立绘图片</button>
-    <button class="command">插入背景图片</button>
-    <button class="command">插入对话</button>
-    <button class="command">结束游戏</button>
+  <div class="panel hide">
+    <div class="commands">
+      <button class="command">插入旁白</button>
+      <button class="command">插入立绘图片</button>
+      <button class="command">插入背景图片</button>
+      <button class="command">插入对话</button>
+      <button class="command">结束游戏</button>
+    </div>
+    <div class="mask"></div>
   </div>
 </span>
 */
@@ -117,7 +94,7 @@ function renderTextCommandPanel(elem: SlateElement, children: VNode[] | null, ed
         contentEditable: false,
       },
       on: {
-        click: () => showCommandPanel(editor, path[0])
+        click: () => showCommandPanel(path[0])
       },
     },
     '+'
@@ -175,13 +152,35 @@ function renderTextCommandPanel(elem: SlateElement, children: VNode[] | null, ed
   }
 
   const vcommandsNode = h(
-    'div.commands.hide',
+    'div.commands',
     {
       props: {
         contentEditable: false,
       }
     },
     vcommandNodes
+  )
+
+  const vmaskNode = h(
+    'div.mask',
+    {
+      props: {
+        contentEditable: false,
+      },
+      on: {
+        click: () => hideCommandPanel(path[0])
+      }
+    }
+  )
+
+  const vpanelNode = h(
+    'div.panel.hide',
+    {
+      props: {
+        contentEditable: false,
+      }
+    },
+    [vcommandsNode, vmaskNode]
   )
 
   const vcommandPanelNode = h(
@@ -191,17 +190,62 @@ function renderTextCommandPanel(elem: SlateElement, children: VNode[] | null, ed
         contentEditable: false,
       }
     },
-    [vshowBtnNode, vcommandsNode]
+    [vshowBtnNode, vpanelNode]
   )
 
   return vcommandPanelNode
 }
+
+function renderTextPlay(elem: SlateElement, children: VNode[] | null, editor: IDomEditor): VNode {
+  const extend = getTextEditorConfig(editor)
+  function onPay(event:any) {
+    if (extend && extend.playTextLine) { 
+      extend.playTextLine(event.sceneName, event.line);
+    }
+  }
+
+  const { line, sceneName } = elem as TextPlayElement
+
+  const vselectNode = h(
+    'strong.text-play',
+    {
+      props: {
+        contentEditable: false,
+      },
+      attrs: {
+        'data-line': line,
+        'data-scene': sceneName
+      },
+      on: {
+        click: () => onPay({ sceneName, line })
+      },
+      style: {
+        marginLeft: '3px',
+        marginRight: '3px',
+        backgroundColor: 'var(--w-e-textarea-slight-bg-color)',
+        borderRadius: '3px',
+        padding: '0 3px',
+      },
+    },
+    'Play'
+  )
+
+  return vselectNode
+}
+
 
 const renderTextCommandPanelElemConf = {
   type: 'textcommand',
   renderElem: renderTextCommandPanel,
 }
 
+
+const renderTextPlayElemConf = {
+  type: 'textplay',
+  renderElem: renderTextPlay,
+}
+
 export {
   renderTextCommandPanelElemConf,
+  renderTextPlayElemConf,
 }

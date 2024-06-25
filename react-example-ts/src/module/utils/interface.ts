@@ -6,7 +6,9 @@ export interface IExtendConfig {
     addExpression: (editor: IDomEditor, text:string) => void
     selectUiExpression: (line:number, role:string, sxpression:string) => void
     playUiLine: (sceneName: string, line: string) => void
+    playTextLine: (sceneName: string, line: string) => void
     // Text
-    taggleTextCommandPanel: (line:number) => void
+    taggleTextCommandPanel: (line: number) => void
+    editorType:"text"|"ui"
   }
 }

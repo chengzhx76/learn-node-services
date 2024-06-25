@@ -10,6 +10,7 @@ import { textcommandPanelParseHtmlConf } from './parse-elem-html'
 
 export * from './custom-types'
 export * from './command'
+export * from './dom'
 
 const module: Partial<IModuleConf> = {
   editorPlugin: withUiEditor,

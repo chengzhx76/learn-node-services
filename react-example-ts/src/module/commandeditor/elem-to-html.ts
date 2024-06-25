@@ -4,7 +4,7 @@
  */
 
 import { SlateElement } from '@wangeditor/editor'
-import { TextCommandPanelElement } from './custom-types'
+import { TextCommandPanelElement, TextPlayElement } from './custom-types'
 
 /*
 
@@ -40,8 +40,17 @@ function textcommandPanelToHtml(elem: SlateElement, childrenHtml: string): strin
       <div class="show-btn">
         <span class="icon-img">+</span>
       </div>
-      <div class="commands hide">${btns}</div>
+      <div class="panel hide">
+        <div class="commands">${btns}</div>
+        <div class="mask"></div>
+      </div>
     </span>`
+  return html
+}
+
+function textplayToHtml(elem: SlateElement, childrenHtml: string): string {
+  const { line, sceneName } = elem as TextPlayElement
+  const html = `<span class="ui-play" data-w-e-type="uiplay" data-line="${line}" data-scene="${sceneName}" data-w-e-is-void data-w-e-is-inline">Play</span>`
   return html
 }
 
@@ -51,6 +60,12 @@ const textcommandPanelElemToHtmlConf = {
   elemToHtml: textcommandPanelToHtml,
 }
 
+const textplayElemToHtmlConf = {
+  type: 'textplay',
+  elemToHtml: textplayToHtml,
+}
+
 export {
   textcommandPanelElemToHtmlConf,
+  textplayElemToHtmlConf,
 }
