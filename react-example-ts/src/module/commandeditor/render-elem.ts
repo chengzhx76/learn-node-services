@@ -1,5 +1,6 @@
 import { h, VNode, VNodeChildren } from 'snabbdom'
-import { DomEditor, IDomEditor, SlateElement, SlateTransforms, SlateNode, SlateRange } from '@wangeditor/editor'
+import { Text } from 'slate'
+import { DomEditor, IDomEditor, SlateElement, SlateTransforms, SlateNode, SlateEditor } from '@wangeditor/editor'
 import { IExtendConfig } from '../utils/interface'
 import { TextCommandPanelElement, TextPlayElement } from './custom-types'
 import { commandTexts } from './command'
@@ -12,38 +13,12 @@ function getTextEditorConfig(editor: IDomEditor) {
   return customEditotConfig
 }
 
-const replaceLineText = (editor: IDomEditor, lineIndex:number, newText:string) => {
-  const path = [lineIndex, 2];
-  SlateTransforms.removeNodes(editor, { at: path });
-  SlateTransforms.insertText(editor, newText, { at: path });
-};
-
-// function showCommandPanel(editor: IDomEditor, line: number) {
-
-  // const extend = getTextEditorConfig(editor)
-  // if (extend.taggleTextCommandPanel) extend.taggleTextCommandPanel(line)
-
-  /* let showLocal: Location | undefined = getCommandPanelLocation(editor, line, "textcommandshow");
-  if (showLocal) {
-    SlateTransforms.removeNodes(editor, { at: showLocal });
-    editor.insertNode(commandHidePanelNode);
-    return;
-  } */
-
-  /* let hideLocal: Location | undefined = getCommandPanelLocation(editor, line, "textcommandhide");
-  if (hideLocal) {
-    SlateTransforms.removeNodes(editor, { at: hideLocal });
-  } */
-  // editor.insertNode(commandShowPanelNode);
-
-
-// }
-
 function addCommand(editor: IDomEditor, line: number, command: string) {
   hideCommandPanel(line)
+  const extend = getTextEditorConfig(editor)
+  if (extend.tagglePanelMask) extend.tagglePanelMask(false)
   insertCommandText(editor, command, line);
 }
-
 
 const getLineText = (editor: IDomEditor, line: number) => {
   const path = [line];
@@ -51,21 +26,43 @@ const getLineText = (editor: IDomEditor, line: number) => {
   return SlateNode.string(node);
 };
 
-function insertCommandText(editor: IDomEditor, text: string, line: number) {
+function insertCommandText(editor: IDomEditor, commandText: string, line: number) {
   if (editor) {
     const currentText = getLineText(editor, line)
-    if (currentText && commandRegx.test(currentText)) {
-      const newText = currentText.replace(commandRegx, "");
-      replaceLineText(editor, line, newText)
+    let insertText = currentText
+    let insertPath = [line, 0]
+
+    if (currentText) {
+      if (commandRegx.test(currentText)) {
+        insertText = currentText.replace(commandRegx, "");
+      }
+      const descendantNodes = SlateNode.descendants(editor, {
+        from: [line],
+        to: [line],
+        reverse: true,
+      });
+      for (const [node, path] of descendantNodes) { 
+        if (Text.isText(node) && SlateNode.string(node)) { 
+          insertPath = path
+          SlateTransforms.removeNodes(editor, { at: path });
+          break
+        }
+      }
     }
+    insertText = commandText + insertText
+    SlateTransforms.insertText(editor, insertText, { at: insertPath });
     setTimeout(() => {
-      // const range = { anchor: { path, offset }, focus: { path, offset } };
-      // Transforms.select(editor, range);
-      const point = { path: [line, 2], offset: 0 };
-      SlateTransforms.select(editor, point);
-      editor.insertText(text);
-    }, 0);
+      const extend = getTextEditorConfig(editor)
+      if (extend.addTextPlay) extend.addTextPlay(editor, line)
+    }, 300)
+
   }
+}
+
+function showCommandPanelHandler(editor: IDomEditor, line: number) {
+  showCommandPanel(line)
+  const extend = getTextEditorConfig(editor)
+  if (extend.tagglePanelMask) extend.tagglePanelMask(true)
 }
 
 /*
@@ -94,7 +91,7 @@ function renderTextCommandPanel(elem: SlateElement, children: VNode[] | null, ed
         contentEditable: false,
       },
       on: {
-        click: () => showCommandPanel(path[0])
+        click: () => showCommandPanelHandler(editor, path[0])
       },
     },
     '+'
@@ -161,7 +158,7 @@ function renderTextCommandPanel(elem: SlateElement, children: VNode[] | null, ed
     vcommandNodes
   )
 
-  const vmaskNode = h(
+  /* const vmaskNode = h(
     'div.mask',
     {
       props: {
@@ -171,7 +168,7 @@ function renderTextCommandPanel(elem: SlateElement, children: VNode[] | null, ed
         click: () => hideCommandPanel(path[0])
       }
     }
-  )
+  ) */
 
   const vpanelNode = h(
     'div.panel.hide',
@@ -180,7 +177,7 @@ function renderTextCommandPanel(elem: SlateElement, children: VNode[] | null, ed
         contentEditable: false,
       }
     },
-    [vcommandsNode, vmaskNode]
+    [vcommandsNode/* , vmaskNode */]
   )
 
   const vcommandPanelNode = h(

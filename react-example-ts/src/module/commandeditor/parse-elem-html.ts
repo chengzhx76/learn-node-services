@@ -32,7 +32,7 @@ function textplayParseHtml(
 
 
 const textplayParseHtmlConf = {
-  selector: 'span[data-w-e-type="textplay"]',
+  selector: 'strong[data-w-e-type="textplay"]',
   parseElemHtml: textplayParseHtml,
 }
 

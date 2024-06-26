@@ -13,6 +13,19 @@
   background: rgba(0, 0, 0, .4);
 }
  */
+
+.mask {
+   position: fixed;
+   top: 0;
+   right: 0;
+   left: 0;
+   bottom: 0;
+   overflow: hidden;
+   z-index: 88;
+   background: rgba(0, 0, 0, .4);
+ }
+
+
 .show-panel {
   width: 20px;
   height: 20px;
@@ -56,16 +69,6 @@
   left: -180px;
 }
 
-.panel .mask{
-    position: fixed;
-    top: 0;
-    right: 0;
-    left: 0;
-    bottom: 0;
-    overflow: hidden;
-    z-index: 88;
-    background: rgba(0, 0, 0, .4);
-}
 
 .panel .commands {
   width: 100%;
@@ -121,4 +124,23 @@
 
 .w-e-scroll {
   overflow-y: visible !important;
+}
+
+/* #text-editor .text-play {
+  position: absolute;
+  right: 10px;
+  cursor: pointer;
+} */
+#text-editor p.line {
+  position: relative !important;
+}
+#text-editor span.warp-text-play {
+  position: absolute !important;
+  top: 0 !important;
+  right: 10px !important;
+}
+#text-editor strong.text-play {
+  position: absolute;
+  right: 0px;
+  cursor: pointer;
 }

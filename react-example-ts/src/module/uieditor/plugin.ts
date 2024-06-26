@@ -1,6 +1,7 @@
 import { IDomEditor, DomEditor, SlateTransforms, SlateEditor, SlateRange, SlateNode, SlateElement } from '@wangeditor/editor'
 import { Location } from 'slate'
 import { IExtendConfig } from '../utils/interface'
+import { removeEditorNode } from '../utils'
 
 function getUiEditorConfig(editor: IDomEditor) {
   const { EXTEND_CONF } = editor.getConfig()
@@ -79,7 +80,7 @@ function withUiEditor<T extends IDomEditor>(editor: T): T {   // TS 语法
           if (preText) {
             if (containColon(preText) && !containColon(text)) {
               SlateTransforms.deselect(editor); // 确保没有选中内容
-              removeNode('uiexpression', newEditor);
+              removeEditorNode('uiexpression', newEditor);
               SlateTransforms.select(editor, selection); // 恢复之前的选区
               /* SlateTransforms.move(editor, {
                 unit: 'line',
@@ -94,7 +95,7 @@ function withUiEditor<T extends IDomEditor>(editor: T): T {   // TS 语法
           lineMap.set(line, text);
         } else {
           // SlateTransforms.deselect(editor);
-          removeNode('uiplay', newEditor);
+          removeEditorNode('uiplay', newEditor);
           // SlateTransforms.select(editor, selection);
         }
       }
@@ -123,20 +124,4 @@ function withUiEditor<T extends IDomEditor>(editor: T): T {   // TS 语法
   return editor
 }
 
-const removeNode = (nodeType: string, editor: IDomEditor) => {
-  let removePath: Location = []
-  let line = 0
-  if (editor && editor.selection) {
-    line = editor.selection.anchor.path[0]
-  }
-  for (const [node, path] of SlateNode.descendants(editor, { from: [line] })) {
-      const type = DomEditor.getNodeType(node);
-      if (type === nodeType) {
-        removePath = path
-      }
-  }
-  if (removePath.length > 0) {
-    SlateTransforms.removeNodes(editor, { at: removePath });
-  }
-}
 export default withUiEditor

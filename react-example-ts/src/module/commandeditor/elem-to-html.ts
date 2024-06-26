@@ -42,7 +42,6 @@ function textcommandPanelToHtml(elem: SlateElement, childrenHtml: string): strin
       </div>
       <div class="panel hide">
         <div class="commands">${btns}</div>
-        <div class="mask"></div>
       </div>
     </span>`
   return html
@@ -50,7 +49,7 @@ function textcommandPanelToHtml(elem: SlateElement, childrenHtml: string): strin
 
 function textplayToHtml(elem: SlateElement, childrenHtml: string): string {
   const { line, sceneName } = elem as TextPlayElement
-  const html = `<span class="ui-play" data-w-e-type="uiplay" data-line="${line}" data-scene="${sceneName}" data-w-e-is-void data-w-e-is-inline">Play</span>`
+  const html = `<strong class="text-play" data-w-e-type="textplay" data-line="${line}" data-scene="${sceneName}" data-w-e-is-void data-w-e-is-inline">Play</strong>`
   return html
 }
 

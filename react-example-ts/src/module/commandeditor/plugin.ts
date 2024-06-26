@@ -1,6 +1,7 @@
 import { IDomEditor, DomEditor, SlateTransforms, SlateEditor, SlateRange, SlateNode, SlateElement } from '@wangeditor/editor'
 import { Path } from 'slate'
 import { IExtendConfig } from '../utils/interface'
+import { removeEditorNode } from '../utils'
 import { TextCommandPanelElement } from "./custom-types";
 import { commands } from './command'
 import { moveCommandPanel } from './dom'
@@ -13,7 +14,7 @@ function getTextEditorConfig(editor: IDomEditor) {
 
 function withUiEditor<T extends IDomEditor>(editor: T): T {   // TS 语法
 
-  const { isInline, isVoid, insertBreak, insertNode, deleteBackward, insertData } = editor
+  const { isInline, isVoid, insertBreak, insertNode, deleteBackward, insertText } = editor
   const newEditor = editor
 
   function insertTextCommand() {
@@ -30,6 +31,12 @@ function withUiEditor<T extends IDomEditor>(editor: T): T {   // TS 语法
         moveCommandPanel(linePath[0])
       }, 300)
     }
+  }
+
+  newEditor.insertText = t => { 
+    const extend = getTextEditorConfig(editor)
+    if (extend.addTextPlay) extend.addTextPlay(newEditor)
+    insertText(t)
   }
 
   newEditor.insertBreak = () => { 
@@ -53,6 +60,8 @@ function withUiEditor<T extends IDomEditor>(editor: T): T {   // TS 语法
       } else {
         if (line !== 0) {
           SlateTransforms.removeNodes(editor, { at: [line] });
+        } else if (line === 0) {
+          removeEditorNode('textplay', editor)
         }
       }
     }

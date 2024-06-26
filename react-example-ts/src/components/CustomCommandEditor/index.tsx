@@ -10,7 +10,7 @@ import {
   SlateEditor,
   SlateNode,
   IEditorConfig,
-  SlateDescendant,
+  DomEditor,
   SlateTransforms,
 } from "@wangeditor/editor";
 import type { UploadProps } from "antd";
@@ -18,14 +18,17 @@ import { Upload } from "antd";
 import { debounce } from "lodash";
 
 import request from "../../util/request";
+import { getEditorNode } from "../../module/utils";
 import { calculateHash, randomCode } from "../../util";
 
 import commandeditorModule, {
   commands,
   commandLabels,
+  hideCommandPanel,
   addShowCommandPanelEvent,
   tagglePlaceholder,
   moveCommandPanel,
+  setTextPlayStyle,
   TextCommandPanelElement,
   TextPlayElement,
 } from "../../module/commandeditor";
@@ -40,7 +43,8 @@ function CustomCommandEditor() {
   const [editor, setEditor] = useState<IDomEditor | null>(null);
   const editorRef = useRef<IDomEditor | null>(null);
   const [html, setHtml] = useState("");
-  const [openMask, setOpenMask] = useState(false);
+  const [loadingMask, setLoadingMask] = useState(false);
+  const [panelMask, setPanelMask] = useState(false);
 
   useEffect(() => {
     return () => {
@@ -71,7 +75,7 @@ function CustomCommandEditor() {
     };
 
     initFinish = false;
-    setOpenMask(true);
+    setLoadingMask(true);
     request.post("/api/editor/sceneDetail", body).then((resp: any) => {
       const data = resp.data.data;
       if (data && editorRef.current) {
@@ -81,7 +85,7 @@ function CustomCommandEditor() {
       }
       setTimeout(() => {
         initFinish = true;
-        setOpenMask(false);
+        setLoadingMask(false);
       }, 300);
     });
   }
@@ -97,6 +101,7 @@ function CustomCommandEditor() {
 
         renderText(_editor, text, i);
         renderCommandPanel(_editor, i);
+        renderPlayNode(_editor, i);
       }
       renderCommandPanel(_editor, list.length);
     } else {
@@ -129,22 +134,54 @@ function CustomCommandEditor() {
   };
 
   function renderPlayNode(_editor: IDomEditor, i: number) {
-    console.log("renderPlayNode===>");
     const playNode: TextPlayElement = {
       type: "textplay",
       line: randomCode(),
       sceneName: "section",
       children: [{ text: "" }],
     };
-    const commandPanelNode: TextCommandPanelElement = {
-      type: "textcommand",
-      list: commands,
-      children: [{ text: "" }],
-    };
-
-    SlateTransforms.insertNodes(_editor, [playNode, commandPanelNode], {
+    SlateTransforms.insertNodes(_editor, playNode, {
       at: [i, 0],
     });
+  }
+
+  function addTextPlay(_editor: IDomEditor, line?: number) {
+    if (_editor) {
+      _editor.restoreSelection();
+      const { selection } = _editor;
+      if (!selection && line === undefined) {
+        return;
+      }
+      let linePath = selection?.anchor.path;
+      if (line !== undefined) {
+        linePath = [line];
+      }
+      if (!linePath) {
+        return;
+      }
+
+      const node = getEditorNode("textplay", _editor);
+      if (node) {
+        return;
+      }
+
+      const playNode: TextPlayElement = {
+        type: "textplay",
+        line: randomCode(),
+        sceneName: "section",
+        children: [{ text: "" }],
+      };
+      SlateTransforms.insertNodes(_editor, playNode, { at: [linePath[0], 0] });
+    }
+  }
+
+  function tagglePanelMask(show: boolean) {
+    setPanelMask(show);
+  }
+
+  function hideCommandPanelAndMask() {
+    setPanelMask(false);
+    hideCommandPanel();
   }
 
   const calculateTextHash = () => {
@@ -176,7 +213,7 @@ function CustomCommandEditor() {
       sectionName: section,
     },
     headers: {
-      Authorization: `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI2NjRjMDYzMGJhOGU4ZDI1MDJhZjUwMDEiLCJ1c2VybmFtZSI6ImNoZW5nZ2MiLCJpYXQiOjE3MTkyODE2MTYsImV4cCI6MTcxOTM2ODAxNn0.YyEfGhZdE1OmHc7M-8tH01TjFW4-B4V62YJIpf6y1kc`,
+      Authorization: `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI2NjRjMDYzMGJhOGU4ZDI1MDJhZjUwMDEiLCJ1c2VybmFtZSI6ImNoZW5nZ2MiLCJpYXQiOjE3MTkzODM2NDgsImV4cCI6MTcxOTQ3MDA0OH0.XuSwoH7oTPdDxRz131akkO_a-ZJtkQFW88hOL4z5SOo`,
     },
     showUploadList: false,
     onChange(info) {
@@ -184,13 +221,13 @@ function CustomCommandEditor() {
       if (!resp) {
         return;
       }
-      setOpenMask(true);
+      setLoadingMask(true);
       if (info.file.status === "done") {
         if (editorRef.current) {
           if (resp && resp.code !== 200) {
             editorRef.current.alert(resp.msg, "error");
             initFinish = true;
-            setOpenMask(false);
+            setLoadingMask(false);
             return;
           }
           const list = info.file.response.data;
@@ -204,7 +241,7 @@ function CustomCommandEditor() {
           renderScene(editorRef.current, list.texts);
           setTimeout(() => {
             initFinish = true;
-            setOpenMask(false);
+            setLoadingMask(false);
           }, 200);
         }
       }
@@ -249,6 +286,21 @@ function CustomCommandEditor() {
       });
     }
   } */
+
+  function addTextCommandShowPanel(line: number) {
+    if (editorRef.current) {
+      editorRef.current.restoreSelection();
+      const playNode: TextPlayElement = {
+        type: "textplay",
+        line: randomCode(),
+        sceneName: "section",
+        children: [{ text: "" }],
+      };
+      SlateTransforms.insertNodes(editorRef.current, playNode, {
+        at: [line, 0],
+      });
+    }
+  }
 
   const undoText = () => {
     const t = editorRef.current?.getText();
@@ -302,12 +354,18 @@ function CustomCommandEditor() {
         if (i == 0 && lineText) {
           text = lineText + text;
         }
-        if (text && !commandLabels.includes(text) && text !== "+") {
+        if (
+          text &&
+          !commandLabels.includes(text) &&
+          text !== "+" &&
+          text !== "play"
+        ) {
           texts.push({
             desc: text,
           });
           renderText(editor, text, insertLine);
           renderCommandPanel(editor, insertLine);
+          renderPlayNode(editor, insertLine);
           insertLine++;
         }
       }
@@ -338,12 +396,12 @@ function CustomCommandEditor() {
 
   const handleChange = (_editor: IDomEditor) => {
     if (_editor == null) return;
+    setTextPlayStyle();
     addShowCommandPanelEvent();
     if (initFinish) {
       putTextEditorText();
     }
     const t = _editor.getText();
-    // console.log("=====text change===>", t);
     tagglePlaceholder(!t.trim());
   };
 
@@ -353,7 +411,9 @@ function CustomCommandEditor() {
     customPaste: handleCustomPaste,
     EXTEND_CONF: {
       customEditotConfig: {
+        addTextPlay,
         playTextLine,
+        tagglePanelMask,
         editorType: "text",
       },
     },
@@ -361,7 +421,8 @@ function CustomCommandEditor() {
 
   return (
     <div className="text body">
-      {openMask && <div className="mask" />}
+      {loadingMask && <div className="mask" />}
+      {panelMask && <div className="mask" onClick={hideCommandPanelAndMask} />}
       {/* {左侧栏} */}
       <div className="sidebar fixed-sidebar-left">
         <h1>Text编辑器</h1>
@@ -371,9 +432,9 @@ function CustomCommandEditor() {
         <br />
         <button onClick={redoText}>重做</button>
         <br />
-        {/* <button onClick={() => addTextCommandShowPanel(1)}>
+        <button onClick={() => addTextCommandShowPanel(2)}>
           addTextCommandShowPanel
-        </button> */}
+        </button>
         <br />
         <Upload {...uploadText} className="uploadtxt">
           <button>上传txt</button>
