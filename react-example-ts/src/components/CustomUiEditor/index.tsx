@@ -6,7 +6,8 @@ import { useState, useRef, useEffect } from "react";
 import { Editor } from "@wangeditor/editor-for-react";
 import type { UploadProps } from "antd";
 import { Upload } from "antd";
-import { randomCode } from "../../util";
+
+import { Path } from "slate";
 
 import {
   IDomEditor,
@@ -17,12 +18,15 @@ import {
 } from "@wangeditor/editor";
 
 import request from "../../util/request";
-import { debounce } from "../../util";
+import { debounce, randomCode } from "../../util";
+import { getEditorNode, hasNode } from "../../module/utils";
 
 import uieditorModule, {
   Expression,
   UiExpressionElement,
   UiPlayElement,
+  checkExpression,
+  setWarnState,
 } from "../../module/uieditor";
 Boot.registerModule(uieditorModule);
 
@@ -62,12 +66,13 @@ function CustomUiEditor() {
     setUiPlayStyle();
     if (initFinish) {
       putUiEditorText();
+      checkExpression();
     }
   };
 
   // ==============http res====================
   function getRoleList() {
-    request.get("/api/editor/getRoleExpressions").then((resp) => {
+    request.get("/api/role/getRoleExpressions").then((resp) => {
       if (resp.data.code === 200 && resp.data.data) {
         const list = resp.data.data;
         list.forEach((item: any) => {
@@ -85,8 +90,8 @@ function CustomUiEditor() {
     const { selection } = editor;
     if (editor && selection) {
       editor.restoreSelection();
-
-      const node = SlateNode.get(editor, selection.anchor.path);
+      const linePath = selection.anchor.path;
+      const node = SlateNode.get(editor, linePath);
       const text = SlateNode.string(node);
       if (text) {
         if (inputText === ":" || inputText === "：") {
@@ -94,19 +99,68 @@ function CustomUiEditor() {
           if (isInclude) {
             return;
           } else {
-            insertExpressionNode(editor, text);
+            if (!hasNode("uiexpression", editor)) {
+              addExpressionNode(editor, text, linePath);
+            }
           }
+        } else {
+          // 输入其他文字检查下是否修改了角色
+          checkExpressionState(editor, linePath);
         }
       } else {
-        if (inputText) {
-          insertPlayNode(editor);
+        if (inputText && !hasNode("uiplay", editor)) {
+          addPlayNode(editor, linePath);
         }
       }
     }
   }
 
-  function insertExpressionNode(_editor: IDomEditor, text: string) {
-    console.log("insertExpressionNode===>", text);
+  function checkExpressionState(editor: IDomEditor, linePath: Path) {
+    const node = getEditorNode("uiexpression", editor);
+    if (node) {
+      const exNode = node.node as UiExpressionElement;
+      const val = exNode.selected;
+      console.log("===exNode.selected.val ", val);
+      if ("无立绘" == val) {
+        const node = SlateNode.get(editor, linePath);
+        const lineText = SlateNode.string(node);
+        let index = lineText.indexOf(":");
+        index = index == -1 ? lineText.indexOf("：") : index;
+        const role = lineText.substring(0, index);
+        console.log("===role==> ", role);
+
+        // TODO 移除old
+
+        let exs: string[] | undefined = userRoles.get(role);
+        if (!exs || exs.length === 0) {
+          return;
+        }
+        const list: Expression[] = [];
+        exs.forEach((ex) => {
+          list.push({
+            label: ex,
+            value: ex,
+          });
+        });
+        const expressionNode: UiExpressionElement = {
+          type: "uiexpression",
+          role: role,
+          selected: "",
+          list: list,
+          children: [{ text: "" }],
+        };
+        SlateTransforms.insertNodes(editor, expressionNode, {
+          at: linePath,
+        });
+      }
+    }
+  }
+
+  function addExpressionNode(
+    _editor: IDomEditor,
+    text: string,
+    linePath: Path
+  ) {
     const role = text.substring(0, text.length);
     let exs: string[] | undefined = userRoles.get(role);
     const list: Expression[] = [];
@@ -131,15 +185,12 @@ function CustomUiEditor() {
       list: list,
       children: [{ text: "" }],
     };
-    const { selection } = _editor;
     SlateTransforms.insertNodes(_editor, expressionNode, {
-      at: selection?.anchor.path,
+      at: linePath,
     });
   }
 
-  function insertPlayNode(editor: IDomEditor) {
-    console.log("insertPlayNode===>");
-    const { selection } = editor;
+  function addPlayNode(editor: IDomEditor, linePath: Path) {
     const playNode: UiPlayElement = {
       type: "uiplay",
       line: randomCode(),
@@ -147,7 +198,7 @@ function CustomUiEditor() {
       children: [{ text: "" }],
     };
     SlateTransforms.insertNodes(editor, playNode, {
-      at: selection?.anchor.path,
+      at: linePath,
     });
   }
 
@@ -242,6 +293,7 @@ function CustomUiEditor() {
         }
       }
       setTimeout(() => {
+        checkExpression();
         initFinish = true;
       }, 300);
       setOpenMask(false);
@@ -329,7 +381,7 @@ function CustomUiEditor() {
       sceneName: scene,
     },
     headers: {
-      Authorization: `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI2NjRjMDYzMGJhOGU4ZDI1MDJhZjUwMDEiLCJ1c2VybmFtZSI6ImNoZW5nZ2MiLCJpYXQiOjE3MTg1ODk3NTUsImV4cCI6MTcxODY3NjE1NX0.tFT_dxOPSxqwCKlIfL2eCNwVvLFQ8tEorrkF-fJWUq4`,
+      Authorization: `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI2NjRjMDYzMGJhOGU4ZDI1MDJhZjUwMDEiLCJ1c2VybmFtZSI6ImNoZW5nZ2MiLCJpYXQiOjE3MTk0NzU3MDYsImV4cCI6MTcxOTU2MjEwNn0.g7of52U55BJrwFqyhP_zwYn9TidWusrFrkYQI3wNyKw`,
     },
     showUploadList: false,
     onChange(info) {
@@ -353,6 +405,10 @@ function CustomUiEditor() {
       const scenes = [];
       for (let lineDom of lineDoms) {
         const selectDom = lineDom.querySelector("select");
+        let expression = "";
+        if (selectDom) {
+          expression = selectDom.value;
+        }
 
         const playDom = lineDom.querySelector(".ui-play");
         let line = "";
@@ -360,10 +416,6 @@ function CustomUiEditor() {
           line = playDom.getAttribute("data-line") as string;
         }
 
-        let expression = "";
-        if (selectDom) {
-          expression = selectDom.value;
-        }
         let text = getChildNodesText(lineDom.childNodes);
 
         scenes.push({
@@ -458,7 +510,7 @@ function CustomUiEditor() {
     },
   };
   return (
-    <div className="ui body">
+    <div id="ui-editor" className="ui body">
       {openMask && <div className="mask" />}
       {/* {左侧栏} */}
       <div className="sidebar fixed-sidebar-left">

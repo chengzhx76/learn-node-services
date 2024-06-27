@@ -28,7 +28,6 @@ export const getEditorNode = (nodeType: string, editor: IDomEditor) => {
   if (editor && editor.selection) {
     const { selection } = editor;
     const linePath = selection.anchor.path;
-
     const descendantNodes = SlateNode.descendants(editor, {
       from: [linePath[0]],
       to: [linePath[0]],
@@ -42,4 +41,24 @@ export const getEditorNode = (nodeType: string, editor: IDomEditor) => {
     }
   }
   return null
+}
+
+export const hasNode = (nodeType: string, editor: IDomEditor) => {
+  if (editor && editor.selection) {
+    const { selection } = editor;
+    const linePath = selection.anchor.path;
+
+    const descendantNodes = SlateNode.descendants(editor, {
+      from: [linePath[0]],
+      to: [linePath[0]],
+      reverse: true,
+      pass: ([node]) => DomEditor.checkNodeType(node, nodeType),
+    });
+    for (const [node, path] of descendantNodes) {
+      if (DomEditor.checkNodeType(node, nodeType)) {
+        return true
+      }
+    }
+  }
+  return false
 }

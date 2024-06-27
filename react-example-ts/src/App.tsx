@@ -10,7 +10,7 @@ import CustomCommandEditor from "./components/CustomCommandEditor";
 import CustomTextEditor from "./components/CustomTextEditor";
 
 function App() {
-  const [editorType, setEditorType] = useState<string>("comm");
+  const [editorType, setEditorType] = useState<string>("ui");
 
   return (
     <>

@@ -23,29 +23,8 @@ function withUiEditor<T extends IDomEditor>(editor: T): T {   // TS 语法
   const newEditor = editor
 
   newEditor.insertText = t => {
-
-    /* const { selection } = editor;
-    if (!selection) {
-      return;
-    }
-    
-    if (SlateNode.has(editor, selection.anchor.path)) { 
-      const node = SlateNode.get(editor, selection.anchor.path);
-      if (node) {
-        const text = SlateNode.string(node);
-        if (text) {
-          const isInclude = commkeys.some(commkey => (text+t).includes(commkey));
-          if (isInclude) {
-            insertText(t);
-            return;
-          }
-        }
-      }
-    } */
-
     const extend = getUiEditorConfig(editor)
     if (extend.addExpression) extend.addExpression(newEditor, t)
-
     insertText(t)
   }
 

@@ -9,6 +9,7 @@ import { uiexpressionElemToHtmlConf, uiplayElemToHtmlConf } from './elem-to-html
 import { uiexpressionParseHtmlConf, uiplayParseHtmlConf } from './parse-elem-html'
 
 export * from './custom-types'
+export * from './dom'
 
 const module: Partial<IModuleConf> = {
   editorPlugin: withUiEditor,

@@ -49,23 +49,14 @@ function renderUiExpression(elem: SlateElement, children: VNode[] | null, editor
     options.push(option)
   }
   const vselectNode = h(
-    'select#id_'+path[0],
+    `select#expression_${ path[0]}.ui-expression`,
     {
       props: {
         // contentEditable: false, // 不可编辑
       },
       on: {
         change: updateSelect
-      },
-      style: {
-        marginLeft: '3px',
-        marginRight: '3px',
-        backgroundColor: 'var(--w-e-textarea-slight-bg-color)',
-        borderRadius: '9px',
-        padding: '1px 3px',
-        color: '#14549C',
-        border: '0'
-      },
+      }
     },
     options
   )
