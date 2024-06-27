@@ -25,9 +25,11 @@ import commandeditorModule, {
   commands,
   commandLabels,
   hideCommandPanel,
+  getText,
   addShowCommandPanelEvent,
   tagglePlaceholder,
   moveCommandPanel,
+  setCommandPanelStyle,
   setTextPlayStyle,
   TextCommandPanelElement,
   TextPlayElement,
@@ -45,16 +47,6 @@ function CustomCommandEditor() {
   const [html, setHtml] = useState("");
   const [loadingMask, setLoadingMask] = useState(false);
   const [panelMask, setPanelMask] = useState(false);
-
-  useEffect(() => {
-    return () => {
-      if (editor == null) return;
-      editor.destroy();
-      setEditor(null);
-      editorRef.current?.destroy();
-      editorRef.current = null;
-    };
-  }, [editor]);
 
   useEffect(() => {
     renderContent();
@@ -81,16 +73,12 @@ function CustomCommandEditor() {
       if (data && editorRef.current) {
         editorRef.current.restoreSelection();
         editorRef.current.clear();
-        renderScene(editorRef.current, data.texts);
+        renderScene(editorRef.current, data.texts, section);
       }
-      setTimeout(() => {
-        initFinish = true;
-        setLoadingMask(false);
-      }, 300);
     });
   }
 
-  function renderScene(_editor: IDomEditor, list: any) {
+  function renderScene(_editor: IDomEditor, list: any, section: string) {
     if (!_editor) {
       return;
     }
@@ -101,7 +89,9 @@ function CustomCommandEditor() {
 
         renderText(_editor, text, i);
         renderCommandPanel(_editor, i);
-        renderPlayNode(_editor, i);
+        if (text) {
+          renderPlay(_editor, section, line.sentence, i);
+        }
       }
       renderCommandPanel(_editor, list.length);
     } else {
@@ -111,6 +101,8 @@ function CustomCommandEditor() {
     setTimeout(() => {
       moveCommandPanel();
       calculateTextHash();
+      setLoadingMask(false);
+      initFinish = true;
     }, 300);
   }
 
@@ -133,11 +125,20 @@ function CustomCommandEditor() {
     });
   };
 
-  function renderPlayNode(_editor: IDomEditor, i: number) {
+  function renderPlay(
+    _editor: IDomEditor,
+    section: string,
+    line: string,
+    i: number
+  ) {
+    let _line = line;
+    if (!line) {
+      _line = randomCode();
+    }
     const playNode: TextPlayElement = {
       type: "textplay",
-      line: randomCode(),
-      sceneName: "section",
+      line: line,
+      sceneName: section,
       children: [{ text: "" }],
     };
     SlateTransforms.insertNodes(_editor, playNode, {
@@ -194,7 +195,7 @@ function CustomCommandEditor() {
         return;
       }
       textHash = calculateHash(t);
-    }, 1500);
+    }, 1200);
   };
 
   // 清空内容
@@ -238,7 +239,7 @@ function CustomCommandEditor() {
           editorRef.current.restoreSelection();
           editorRef.current.clear();
 
-          renderScene(editorRef.current, list.texts);
+          renderScene(editorRef.current, list.texts, section);
           setTimeout(() => {
             initFinish = true;
             setLoadingMask(false);
@@ -248,11 +249,21 @@ function CustomCommandEditor() {
     },
   };
 
-  const putTextEditorText = debounce(() => {
+  const putTextEditorText = debounce((_section: string) => {
+    const scenes = getText();
+    let text = "";
+    scenes.forEach((scene) => {
+      if (scene.text) {
+        text += `${scene.line}|${scene.text}\n`;
+      } else {
+        text += "\n";
+      }
+    });
+
     const body = {
       gameName: gameName,
-      sectionName: section,
-      text: editorRef.current?.getText(),
+      sectionName: _section,
+      text: text,
     };
     request.post("/api/editor/editTxtScene", body).then((resp: any) => {
       // console.log('===保存场景内容==>', resp.data.data);
@@ -260,6 +271,9 @@ function CustomCommandEditor() {
   }, 800);
 
   function playTextLine(sceneName: string, line: string) {
+    if (!line) {
+      return;
+    }
     const body = {
       gameName: gameName,
       sectionName: section,
@@ -358,14 +372,14 @@ function CustomCommandEditor() {
           text &&
           !commandLabels.includes(text) &&
           text !== "+" &&
-          text !== "play"
+          text !== "Play"
         ) {
           texts.push({
             desc: text,
           });
           renderText(editor, text, insertLine);
           renderCommandPanel(editor, insertLine);
-          renderPlayNode(editor, insertLine);
+          renderPlay(editor, section, "", insertLine);
           insertLine++;
         }
       }
@@ -388,6 +402,16 @@ function CustomCommandEditor() {
     return false;
   };
 
+  useEffect(() => {
+    return () => {
+      if (editor == null) return;
+      editor.destroy();
+      setEditor(null);
+      editorRef.current?.destroy();
+      editorRef.current = null;
+    };
+  }, [editor]);
+
   const handleCreated = (_editor: IDomEditor) => {
     if (_editor == null) return;
     setEditor(_editor);
@@ -397,9 +421,10 @@ function CustomCommandEditor() {
   const handleChange = (_editor: IDomEditor) => {
     if (_editor == null) return;
     setTextPlayStyle();
+    setCommandPanelStyle();
     addShowCommandPanelEvent();
     if (initFinish) {
-      putTextEditorText();
+      putTextEditorText(section);
     }
     const t = _editor.getText();
     tagglePlaceholder(!t.trim());

@@ -61,8 +61,10 @@ function renderUiExpression(elem: SlateElement, children: VNode[] | null, editor
         marginLeft: '3px',
         marginRight: '3px',
         backgroundColor: 'var(--w-e-textarea-slight-bg-color)',
-        borderRadius: '3px',
-        padding: '0 3px',
+        borderRadius: '9px',
+        padding: '1px 3px',
+        color: '#14549C',
+        border: '0'
       },
     },
     options

@@ -27,8 +27,7 @@ export const tagglePlaceholder = debounce((isShow: boolean) => {
 }, 200);
 
 export const moveCommandPanel = (line?: number) => {
-  const lineDoms = document.querySelectorAll("div#text-editor p");
-  // console.log('moveCommandPanel.line', line);
+  /* const lineDoms = document.querySelectorAll("div#text-editor p");
   if (lineDoms.length > 0) {
     if (line === undefined) {
       for (let i = 0; i < lineDoms.length; i++) {
@@ -37,12 +36,11 @@ export const moveCommandPanel = (line?: number) => {
     } else {
       moveCommandPanelDom(lineDoms, line)
     }
-  }
+  } */
 };
 
 export const moveTextPlay = (line?: number) => {
   /* const lineDoms = document.querySelectorAll("div#text-editor p");
-  // console.log('moveCommandPanel.line', line);
   if (lineDoms.length > 0) {
     if (line === undefined) {
       for (let i = 0; i < lineDoms.length; i++) {
@@ -55,7 +53,6 @@ export const moveTextPlay = (line?: number) => {
 };
 
 const moveCommandPanelDom = (lineDoms: NodeListOf<ParentNode>, line: number) => {
-  // console.log('moveCommandPanelDom===>', line);
   if (line < 0 || line >= lineDoms.length) {
     return;
   }
@@ -63,7 +60,6 @@ const moveCommandPanelDom = (lineDoms: NodeListOf<ParentNode>, line: number) => 
   if (!lineDom) {
     return;
   }
-  // console.log('moveCommandPanelDom2===>', line);
   const commandPanelDom = lineDom.querySelector('.command-panel');
   if (lineDom && commandPanelDom) {
     // 从当前位置移除command-panel
@@ -145,12 +141,57 @@ export function setTextPlayStyle() {
   if (textPayDoms && textPayDoms.length > 0) {
     for (let i = 0; i < textPayDoms.length; i++) {
       const textPayDom = textPayDoms[i];
-      if (textPayDom && textPayDom.parentNode && textPayDom.parentNode.parentNode) {
-        let lineDom = textPayDom.parentNode.parentNode as HTMLElement;
+      if (textPayDom && textPayDom.parentNode) {
+        // let lineDom = textPayDom.parentNode.parentNode as HTMLElement;
         let warpDom = textPayDom.parentNode as HTMLElement;
-        lineDom.className = "line";
+        // lineDom.className = "line";
         warpDom.className = "warp-text-play";
       }
     }
   }
+}
+
+export function setCommandPanelStyle() {
+  const commandPanelDoms = document.querySelectorAll("#text-editor .command-panel");
+  if (commandPanelDoms && commandPanelDoms.length > 0) {
+    for (let i = 0; i < commandPanelDoms.length; i++) {
+      const commandPanelDom = commandPanelDoms[i];
+      if (commandPanelDom && commandPanelDom.parentNode) {
+        let warpDom = commandPanelDom.parentNode as HTMLElement;
+        warpDom.className = "warp-command-panel";
+      }
+    }
+  }
+}
+
+export function getText() { 
+  const lineDoms = document.querySelectorAll("#text-editor p");
+  const scenes = [];
+  for (let lineDom of lineDoms) {
+    const playDom = lineDom.querySelector(".text-play");
+    let line = "";
+    if (playDom?.hasAttribute("data-line")) {
+      line = playDom.getAttribute("data-line") as string;
+    }
+    let text = getChildNodesText(lineDom.childNodes);
+    scenes.push({
+      text,
+      line,
+    });
+  }
+  return scenes;
+}
+
+function getChildNodesText(nodes: NodeListOf<ChildNode>, texts: string[] = []) {
+  for (let node of nodes) {
+    if (node.nodeType === Node.TEXT_NODE && node.parentElement?.tagName.toLowerCase() === "span") {
+      const content = node.textContent?.trim();
+      if (content) {
+        texts.push(content);
+      }
+    } else if (node.nodeType === Node.ELEMENT_NODE) {
+      getChildNodesText(node.childNodes, texts);
+    }
+  }
+  return texts.join("");
 }

@@ -85,7 +85,7 @@ function renderTextCommandPanel(elem: SlateElement, children: VNode[] | null, ed
   const path = DomEditor.findPath(editor, elem); 
   
   const viconImgNode = h(
-    'span.icon-img.hide',
+    'strong.icon-img.hide',
     {
       props: {
         contentEditable: false,
@@ -124,7 +124,7 @@ function renderTextCommandPanel(elem: SlateElement, children: VNode[] | null, ed
       }
     )
     const vlabelNode = h(
-      'span.label',
+      'i.label',
       {
         props: {
           contentEditable: false,

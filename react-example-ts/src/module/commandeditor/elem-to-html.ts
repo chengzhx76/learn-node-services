@@ -31,14 +31,14 @@ function textcommandPanelToHtml(elem: SlateElement, childrenHtml: string): strin
     btns += `
     <button class="command">
       <img class="icon" src="${icon}" alt="${label}">
-      <span class="label">${label}</span>
+      <i class="label">${label}</i>
     </button>`
   }
   const listStr = encodeURIComponent(JSON.stringify(list))
   const html = `
     <span class="command-panel" data-w-e-type="textcommand" data-list="${listStr}" data-w-e-is-void data-w-e-is-inline>
       <div class="show-btn">
-        <span class="icon-img">+</span>
+        <strong class="icon-img">+</strong>
       </div>
       <div class="panel hide">
         <div class="commands">${btns}</div>
