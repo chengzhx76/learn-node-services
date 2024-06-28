@@ -14,7 +14,7 @@ function getTextEditorConfig(editor: IDomEditor) {
 
 function withUiEditor<T extends IDomEditor>(editor: T): T {   // TS 语法
 
-  const { isInline, isVoid, insertBreak, insertNode, deleteBackward, insertText } = editor
+  const { isInline, isVoid, insertBreak, deleteBackward, insertText } = editor
   const newEditor = editor
 
   function insertTextCommand() {
@@ -34,23 +34,44 @@ function withUiEditor<T extends IDomEditor>(editor: T): T {   // TS 语法
   }
 
   newEditor.insertText = t => { 
+    // @ts-ignore
+    const editorMode = window['editorMode']
+    if (editorMode === 'ui') {
+      insertText(t)
+      return
+    }
     const extend = getTextEditorConfig(editor)
-    if (extend.addTextPlay) extend.addTextPlay(newEditor)
+    if (extend.addTextPlay && extend.editorType === 'text') {
+      extend.addTextPlay(newEditor)
+    }
     insertText(t)
   }
 
   newEditor.insertBreak = () => { 
-    insertBreak();
+    // @ts-ignore
+    const editorMode = window['editorMode']
+    if (editorMode === 'ui') {
+      insertBreak();
+      return
+    }
     const extend = getTextEditorConfig(editor);
     if (extend.editorType && extend.editorType === 'text') {
       setTimeout(() => { 
         insertTextCommand()
       }, 100)
     }
+    insertBreak();
   }
 
   newEditor.deleteBackward = unit => {
-    if (editor && editor.selection) { 
+    // @ts-ignore
+    const editorMode = window['editorMode']
+    if (editorMode === 'ui') {
+      deleteBackward(unit)
+      return
+    }
+    const extend = getTextEditorConfig(editor);
+    if (extend.editorType && extend.editorType === 'text' && editor && editor.selection) { 
       const linePath = editor.selection.anchor.path
       const line = linePath[0]
       const lineNode = SlateNode.get(editor, linePath);
@@ -65,10 +86,6 @@ function withUiEditor<T extends IDomEditor>(editor: T): T {   // TS 语法
         }
       }
     }
-  }
-
-  newEditor.insertNode = (node) => {
-    return insertNode(node);
   }
 
   /* newEditor.insertData = (data: DataTransfer) => {

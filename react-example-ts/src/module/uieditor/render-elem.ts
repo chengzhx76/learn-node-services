@@ -21,9 +21,13 @@ function renderUiExpression(elem: SlateElement, children: VNode[] | null, editor
 
   const extend = getUiEditorConfig(editor)
   function updateSelect(event:any) {
-    console.log('Selected value:', event.target.value, line);
+    console.log('Selected value:', event, event.target.value, line);
     if (extend && extend.selectUiExpression) { 
-      extend.selectUiExpression(line, '', event.target.value);
+      const ex = event.target.value
+      // const role = event.dataset.role
+      // const listStr = decodeURIComponent(event.dataset.list)
+      // const list = JSON.parse(listStr)
+      extend.selectUiExpression(editor, ex);
     }
   }
 
@@ -103,12 +107,12 @@ function renderUiPlay(elem: SlateElement, children: VNode[] | null, editor: IDom
 }
 
 const renderUiExpressionElemConf = {
-  type: 'uiexpression', // 节点 type ，重要！！！
+  type: 'uiexpression',
   renderElem: renderUiExpression,
 }
 
 const renderUiPlayElemConf = {
-  type: 'uiplay', // 节点 type ，重要！！！
+  type: 'uiplay',
   renderElem: renderUiPlay,
 }
 

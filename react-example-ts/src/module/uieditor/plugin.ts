@@ -9,7 +9,7 @@ function getUiEditorConfig(editor: IDomEditor) {
   return customEditotConfig
 }
 
-const lineMap = new Map<number, string>()
+// const lineMap = new Map<number, string>()
 
 const commkeys = ['旁白:', '旁白：', '黑屏文字:', '黑屏文字：']
 
@@ -17,72 +17,73 @@ function containColon(text:string) {
   return text.indexOf(':') !== -1 || text.indexOf('：') !== -1
 }
 
+function monitorRemoveNode(editor: IDomEditor) {
+   const { selection } = editor;
+    if (!selection) {
+      return;
+    }
+  const linePath = selection.anchor.path;
+  const node = SlateNode.get(editor, linePath);
+  if (!node) {
+    return;
+  }
+  const lineText = SlateNode.string(node);
+  if (lineText) {
+    const isInclude = commkeys.some(commkey => lineText.includes(commkey));
+    if (isInclude) {
+      return
+    }
+    /* const preText = lineMap.get(linePath[0]);
+    if (preText && containColon(preText) && !containColon(lineText)) {
+      // SlateTransforms.deselect(editor); // 确保没有选中内容
+      removeEditorNode('uiexpression', newEditor);
+      // SlateTransforms.select(editor, selection); // 恢复之前的选区
+    }
+    lineMap.set(linePath[0], lineText); */
+    if (containColon(lineText)) {
+      return
+    }
+    removeEditorNode('uiexpression', editor);
+  } else {
+    removeEditorNode('uiplay', editor);
+  }
+}
+
 function withUiEditor<T extends IDomEditor>(editor: T): T {   // TS 语法
   
-  const { insertText, isInline, isVoid, insertBreak, insertNode, deleteBackward } = editor
+  const { insertText, deleteBackward, isInline, isVoid } = editor
   const newEditor = editor
 
   newEditor.insertText = t => {
+    // @ts-ignore
+    const editorMode = window['editorMode']
+    if (editorMode === 'text') {
+      insertText(t)
+      return
+    }
     const extend = getUiEditorConfig(editor)
-    if (extend.addExpression) extend.addExpression(newEditor, t)
+    if (extend && extend.editorType === 'ui' && extend.addExpression) {
+      extend.addExpression(newEditor, t)
+    }
     insertText(t)
   }
 
-  newEditor.insertBreak = () => { 
-    insertBreak();
-  }
-
-  newEditor.insertNode = (node) => {
-    return insertNode(node);
-  }
   
   newEditor.deleteBackward = (unit) => {
-    const { selection } = editor;
-    if (!selection) {
+    // @ts-ignore
+    const editorMode = window['editorMode']
+    if (editorMode === 'text') {
       deleteBackward(unit);
-      return;
+      return
+    }
+    const extend = getUiEditorConfig(editor);
+    if (extend && extend.editorType === 'ui') {
+      setTimeout(() => { 
+        monitorRemoveNode(editor)
+        extend.checkExpression(editor)
+      }, 500)
     }
     deleteBackward(unit);
-
-    const extend = getUiEditorConfig(editor);
-    if (extend.editorType && extend.editorType === 'ui' && SlateNode.has(editor, selection.anchor.path)) {
-      const node = SlateNode.get(editor, selection.anchor.path);
-      if (node) {
-        const text = SlateNode.string(node);
-        if (text) {
-          const isInclude = commkeys.some(commkey => text.includes(commkey));
-          if (isInclude) {
-            return;
-          }
-          const line = selection.anchor.path[0];
-          const preText = lineMap.get(line);
-          if (preText) {
-            if (containColon(preText) && !containColon(text)) {
-              SlateTransforms.deselect(editor); // 确保没有选中内容
-              removeEditorNode('uiexpression', newEditor);
-              SlateTransforms.select(editor, selection); // 恢复之前的选区
-              /* SlateTransforms.move(editor, {
-                unit: 'line',
-                edge: 'end',
-                reverse: false,
-              }); */
-              // const end = SlateEditor.end(editor, []);
-              // SlateTransforms.select(editor, end);
-              // editor.select(end);
-            }
-          }
-          lineMap.set(line, text);
-        } else {
-          // SlateTransforms.deselect(editor);
-          removeEditorNode('uiplay', newEditor);
-          // SlateTransforms.select(editor, selection);
-        }
-      }
-    }
-    /* const { postScenesText } = getUiEditorConfig(newEditor);
-    if (postScenesText) {
-      postScenesText();
-    } */
   };
 
   newEditor.isInline = elem => {

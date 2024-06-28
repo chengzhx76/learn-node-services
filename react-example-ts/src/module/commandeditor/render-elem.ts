@@ -52,6 +52,9 @@ function insertCommandText(editor: IDomEditor, commandText: string, line: number
     insertText = commandText + insertText
     SlateTransforms.insertText(editor, insertText, { at: insertPath });
     setTimeout(() => {
+      SlateTransforms.select(editor, { path: insertPath, offset: insertText.length });
+    }, 500)
+    setTimeout(() => {
       const extend = getTextEditorConfig(editor)
       if (extend.addTextPlay) extend.addTextPlay(editor, line)
     }, 300)

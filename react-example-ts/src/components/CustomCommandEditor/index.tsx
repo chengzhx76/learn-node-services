@@ -28,7 +28,6 @@ import commandeditorModule, {
   getText,
   addShowCommandPanelEvent,
   tagglePlaceholder,
-  moveCommandPanel,
   setCommandPanelStyle,
   setTextPlayStyle,
   TextCommandPanelElement,
@@ -49,6 +48,8 @@ function CustomCommandEditor() {
   const [panelMask, setPanelMask] = useState(false);
 
   useEffect(() => {
+    // @ts-ignore
+    window["editorMode"] = "text";
     renderContent();
   }, [section]);
 
@@ -99,7 +100,6 @@ function CustomCommandEditor() {
       tagglePlaceholder(true);
     }
     setTimeout(() => {
-      moveCommandPanel();
       calculateTextHash();
       setLoadingMask(false);
       initFinish = true;
@@ -390,12 +390,6 @@ function CustomCommandEditor() {
       }
       const endPoint = SlateEditor.end(editor, [cursorLine]);
       SlateTransforms.select(editor, endPoint);
-
-      if (insertLine > line) {
-        setTimeout(() => {
-          moveCommandPanel();
-        }, 300);
-      }
     }
 
     event.preventDefault();

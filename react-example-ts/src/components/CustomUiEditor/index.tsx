@@ -11,30 +11,33 @@ import { Path } from "slate";
 
 import {
   IDomEditor,
+  SlateEditor,
   IEditorConfig,
   Boot,
   SlateTransforms,
   SlateNode,
+  DomEditor,
 } from "@wangeditor/editor";
 
 import request from "../../util/request";
-import { debounce, randomCode } from "../../util";
+import { debounce, calculateHash, randomCode } from "../../util";
 import { getEditorNode, hasNode } from "../../module/utils";
 
 import uieditorModule, {
   Expression,
   UiExpressionElement,
   UiPlayElement,
-  checkExpression,
-  setWarnState,
+  checkStandard,
+  setUiPlayStyle,
+  getText,
 } from "../../module/uieditor";
 Boot.registerModule(uieditorModule);
 
-// TODO 集成需要改成动态值
 const gameName = "test";
 const commkeys = ["旁白", "黑屏文字"];
 
 let initFinish = false;
+let initTextHash = "";
 const userRoles = new Map<string, string[]>();
 
 function CustomUiEditor() {
@@ -45,6 +48,8 @@ function CustomUiEditor() {
 
   // ==============base====================
   useEffect(() => {
+    // @ts-ignore
+    window["editorMode"] = "ui";
     return () => {
       if (editor == null) return;
       editor.destroy();
@@ -64,9 +69,9 @@ function CustomUiEditor() {
   const handleChange = (_editor: IDomEditor) => {
     if (_editor == null) return;
     setUiPlayStyle();
+    checkStandard();
     if (initFinish) {
       putUiEditorText();
-      checkExpression();
     }
   };
 
@@ -96,16 +101,14 @@ function CustomUiEditor() {
       if (text) {
         if (inputText === ":" || inputText === "：") {
           const isInclude = commkeys.some((commkey) => text.includes(commkey));
-          if (isInclude) {
-            return;
-          } else {
-            if (!hasNode("uiexpression", editor)) {
-              addExpressionNode(editor, text, linePath);
-            }
+          if (!isInclude && !hasNode("uiexpression", editor)) {
+            addExpressionNode(editor, text, linePath);
           }
         } else {
           // 输入其他文字检查下是否修改了角色
-          checkExpressionState(editor, linePath);
+          setTimeout(() => {
+            checkExpression(editor);
+          }, 800);
         }
       } else {
         if (inputText && !hasNode("uiplay", editor)) {
@@ -115,43 +118,84 @@ function CustomUiEditor() {
     }
   }
 
-  function checkExpressionState(editor: IDomEditor, linePath: Path) {
-    const node = getEditorNode("uiexpression", editor);
-    if (node) {
-      const exNode = node.node as UiExpressionElement;
-      const val = exNode.selected;
-      console.log("===exNode.selected.val ", val);
-      if ("无立绘" == val) {
-        const node = SlateNode.get(editor, linePath);
-        const lineText = SlateNode.string(node);
-        let index = lineText.indexOf(":");
-        index = index == -1 ? lineText.indexOf("：") : index;
-        const role = lineText.substring(0, index);
-        console.log("===role==> ", role);
+  /* function hasEx(exEle: UiExpressionElement) {
+    if (
+      !exEle.selected ||
+      "无立绘" === exEle.selected ||
+      exEle.list.length === 0
+    ) {
+      console.log("=====hasEx1======");
+      return false;
+    }
+    for (let i = 0; i < exEle.list.length; i++) {
+      const ex = exEle.list[i];
+      if (ex.value === "无立绘") {
+        console.log("=====hasEx2======");
+        return false;
+      }
+    }
+    console.log("=====hasEx3======");
+    return true;
+  } */
 
-        // TODO 移除old
+  function modifyNode(
+    editor: IDomEditor,
+    path: Path,
+    role: string,
+    exs: string[]
+  ) {
+    const list: Expression[] = [];
+    exs.forEach((ex) => {
+      list.push({
+        label: ex,
+        value: ex,
+      });
+    });
+    const expressionNode: UiExpressionElement = {
+      type: "uiexpression",
+      role: role,
+      selected: list[0].value,
+      list: list,
+      children: [{ text: "" }],
+    };
+    // console.log(`===expressionNode=`, expressionNode);
+    SlateTransforms.setNodes(editor, expressionNode, {
+      at: path,
+      match: (n) => DomEditor.checkNodeType(n, "uiexpression"),
+    });
+  }
 
-        let exs: string[] | undefined = userRoles.get(role);
-        if (!exs || exs.length === 0) {
-          return;
+  function checkExpression(editor: IDomEditor) {
+    const { selection } = editor;
+    if (editor && selection) {
+      const linePath = selection.anchor.path;
+      const exNode = getEditorNode("uiexpression", editor);
+      if (!exNode) {
+        return;
+      }
+      const exEle = exNode.node as UiExpressionElement;
+      // console.log("exEle===> ", exEle);
+
+      const textNode = SlateNode.get(editor, linePath);
+      const lineText = SlateNode.string(textNode);
+      const index =
+        lineText.indexOf(":") > -1
+          ? lineText.indexOf(":")
+          : lineText.indexOf("：");
+      const role = lineText.slice(0, index);
+
+      let exs: string[] | undefined = userRoles.get(role);
+
+      // console.log(`===role=<${role}>`, lineText, role, exs);
+
+      if (exs && exs.length) {
+        // console.log("========if=============", exEle.selected);
+        if (exEle.selected === "无立绘") {
+          modifyNode(editor, exNode.path, role, exs);
         }
-        const list: Expression[] = [];
-        exs.forEach((ex) => {
-          list.push({
-            label: ex,
-            value: ex,
-          });
-        });
-        const expressionNode: UiExpressionElement = {
-          type: "uiexpression",
-          role: role,
-          selected: "",
-          list: list,
-          children: [{ text: "" }],
-        };
-        SlateTransforms.insertNodes(editor, expressionNode, {
-          at: linePath,
-        });
+      } else {
+        // console.log("========else=============");
+        modifyNode(editor, exNode.path, role, ["无立绘"]);
       }
     }
   }
@@ -175,13 +219,13 @@ function CustomUiEditor() {
     if (!list || list.length === 0) {
       list.push({
         label: "无立绘",
-        value: "",
+        value: "无立绘",
       });
     }
     const expressionNode: UiExpressionElement = {
       type: "uiexpression",
       role: role,
-      selected: "",
+      selected: list[0].value,
       list: list,
       children: [{ text: "" }],
     };
@@ -202,29 +246,22 @@ function CustomUiEditor() {
     });
   }
 
-  function selectUiExpression(line: number, role: string, expression: string) {
-    // console.log("selectUiExpression===>", line, role, expression, `id_${line}`);
-    setTimeout(() => {
-      _putUiEditorText().then((res) => {
-        if (res) {
-          renderContent();
-        }
+  function selectUiExpression(editor: IDomEditor, expression: string) {
+    const exNode = getEditorNode("uiexpression", editor);
+    if (exNode) {
+      const exEle = exNode.node as UiExpressionElement;
+      const expressionNode: UiExpressionElement = {
+        type: "uiexpression",
+        role: exEle.role,
+        selected: expression,
+        list: exEle.list,
+        children: [{ text: "" }],
+      };
+      SlateTransforms.setNodes(editor, expressionNode, {
+        at: exNode.path,
+        match: (n) => DomEditor.checkNodeType(n, "uiexpression"),
       });
-    }, 200);
-    /* const selectDom = document.getElementById(
-      `id_${line}`
-    ) as HTMLSelectElement;
-
-    for (let i = 0; i < selectDom.options.length; i++) {
-      const option = selectDom.options[i];
-
-      if (option.hasAttribute("selected")) {
-        option.removeAttribute("selected");
-      }
-      if (option.value === expression) {
-        option.setAttribute("selected", "");
-      }
-    } */
+    }
   }
   function playUiLine(sceneName: string, line: string) {
     const body = {
@@ -272,6 +309,19 @@ function CustomUiEditor() {
     });
   }
 
+  const calculateTextHash = () => {
+    setTimeout(() => {
+      if (!initFinish || editorRef.current == null) {
+        return;
+      }
+      const t = editorRef.current.getText();
+      if (!t) {
+        return;
+      }
+      initTextHash = calculateHash(t);
+    }, 1200);
+  };
+
   function renderScene(_editor: IDomEditor, list: any, scene: string) {
     if (!_editor) {
       return;
@@ -293,10 +343,10 @@ function CustomUiEditor() {
         }
       }
       setTimeout(() => {
-        checkExpression();
         initFinish = true;
+        calculateTextHash();
+        setOpenMask(false);
       }, 300);
-      setOpenMask(false);
     }, 1000);
   }
 
@@ -318,29 +368,31 @@ function CustomUiEditor() {
       return;
     }
 
-    const localExs: string[] | undefined = userRoles.get(role);
-    const exs: Expression[] = [];
-    if (localExs) {
-      for (let ex of localExs) {
-        exs.push({
+    const exs: string[] | undefined = userRoles.get(role);
+    const list: Expression[] = [];
+    if (exs) {
+      for (let ex of exs) {
+        list.push({
           label: ex,
           value: ex,
         });
       }
     } else {
-      exs.push({
+      list.push({
         label: "无立绘",
-        value: "",
+        value: "无立绘",
       });
     }
+
+    const selected = label ? label : list[0].value;
+
     const expressionNode: UiExpressionElement = {
       type: "uiexpression",
       role: role,
-      selected: label,
-      list: exs,
+      selected: selected,
+      list: list,
       children: [{ text: "" }],
     };
-
     SlateTransforms.insertNodes(_editor, expressionNode, { at: [i, 0] });
   }
 
@@ -399,80 +451,80 @@ function CustomUiEditor() {
     },
   };
 
-  const _putUiEditorText = () => {
-    return new Promise((resolve, reject) => {
-      const lineDoms = document.querySelectorAll("div.w-e-text-container p");
-      const scenes = [];
-      for (let lineDom of lineDoms) {
-        const selectDom = lineDom.querySelector("select");
-        let expression = "";
-        if (selectDom) {
-          expression = selectDom.value;
-        }
-
-        const playDom = lineDom.querySelector(".ui-play");
-        let line = "";
-        if (playDom && playDom.hasAttribute("data-line")) {
-          line = playDom.getAttribute("data-line") as string;
-        }
-
-        let text = getChildNodesText(lineDom.childNodes);
-
-        scenes.push({
-          expression,
-          text,
-          line,
-        });
-        // console.log("=======scenes======>", expression, text, line, scenes);
+  const putUiEditorText = debounce(() => {
+    const scenes = getText();
+    let text = "";
+    scenes.forEach((scene) => {
+      if (scene.text) {
+        text += `${scene.line}|${scene.expression}|${scene.text}\n`;
+      } else {
+        text += "\n";
       }
-      let text = "";
-      scenes.forEach((scene) => {
-        if (scene.text) {
-          text += `${scene.line}|${scene.expression}|${scene.text}\n`;
-        } else {
-          text += "\n";
-        }
-      });
-      // console.log("cheng.发送-scenes-text======> ", text);
-
-      const body = {
-        gameName: gameName,
-        sectionName: section,
-        sceneName: scene,
-        dialogue: text,
-      };
-      // 动态上传用户输入内容
-      request
-        .post("/api/editor/editUiScene/dialogue", body)
-        .then((resp: any) => {
-          // console.log("===保存场景内容==>", resp.data.data);
-          resolve(true);
-        });
     });
-  };
+    const body = {
+      gameName: gameName,
+      sectionName: section,
+      sceneName: scene,
+      dialogue: text,
+    };
+    // 动态上传用户输入内容
+    request.post("/api/editor/editUiScene/dialogue", body).then((resp: any) => {
+      // console.log("===保存场景内容==>", resp.data.data);
+    });
+  }, 800);
 
-  const putUiEditorText = debounce(_putUiEditorText, 800);
+  const handleCustomPaste = (
+    editor: IDomEditor,
+    event: ClipboardEvent
+  ): boolean => {
+    const data = event.clipboardData?.getData("text/plain");
+    // let plainHTML = event.clipboardData?.getData("text/html");
 
-  function getChildNodesText(
-    nodes: NodeListOf<ChildNode>,
-    texts: string[] = []
-  ) {
-    for (let node of nodes) {
-      if (
-        node.nodeType === Node.TEXT_NODE &&
-        node.parentElement &&
-        node.parentElement.tagName.toLowerCase() === "span"
-      ) {
-        const content = node.textContent?.trim();
-        if (content) {
-          texts.push(content);
-        }
-      } else if (node.nodeType === Node.ELEMENT_NODE) {
-        getChildNodesText(node.childNodes, texts);
+    const { selection } = editor;
+    if (data && editor && selection) {
+      editor.restoreSelection();
+      const linePath = selection.anchor.path;
+      const line = linePath[0];
+      const lineNode = SlateNode.get(editor, linePath);
+      const lineText = SlateNode.string(lineNode);
+      if (lineText) {
+        SlateTransforms.removeNodes(editor, { at: [line] });
       }
+
+      const datas = data.split("\n");
+
+      let insertLine = line;
+      for (let i = 0; i < datas.length; i++) {
+        let text = datas[i]?.trim();
+        if (i == 0 && lineText) {
+          text = lineText + text;
+        }
+        if (text && text !== "Play") {
+          const index = text.indexOf(":")
+            ? text.indexOf(":")
+            : text.indexOf("：");
+          const role = text.substring(0, index);
+          renderText(editor, text, insertLine);
+          if (role) {
+            renderExpression(editor, { role, lanel: "" }, insertLine);
+          }
+          renderPlay(editor, scene, "", insertLine);
+
+          insertLine++;
+        }
+      }
+
+      let cursorLine = insertLine;
+      if (lineText) {
+        cursorLine--;
+      }
+      const endPoint = SlateEditor.end(editor, [cursorLine]);
+      SlateTransforms.select(editor, endPoint);
     }
-    return texts.join("");
-  }
+
+    event.preventDefault();
+    return false;
+  };
 
   const insertHtml = () => {
     if (editor == null) return;
@@ -485,6 +537,15 @@ function CustomUiEditor() {
     editor.insertText("hh");
   };
   const undoText = () => {
+    const t = editorRef.current?.getText();
+    let currentTextHash = "";
+    if (t) {
+      currentTextHash = calculateHash(t);
+      // console.log(`Hash|${t} | ${textHash} | ${currentTextHash} `);
+    }
+    if (initTextHash === currentTextHash) {
+      return;
+    }
     if (editor != null && editor.undo) {
       editor.undo();
     }
@@ -499,12 +560,13 @@ function CustomUiEditor() {
   // 编辑器配置
   const editorConfig: Partial<IEditorConfig> = {
     placeholder: "请输入内容...",
+    customPaste: handleCustomPaste,
     EXTEND_CONF: {
       customEditotConfig: {
         addExpression,
         selectUiExpression,
+        checkExpression,
         playUiLine,
-        putUiEditorText,
         editorType: "ui",
       },
     },
@@ -566,21 +628,6 @@ function CustomUiEditor() {
       </div>
     </div>
   );
-}
-
-function setUiPlayStyle() {
-  const uiPayDoms = document.querySelectorAll(".ui-play");
-  if (uiPayDoms && uiPayDoms.length > 0) {
-    for (let i = 0; i < uiPayDoms.length; i++) {
-      const uiPayDom = uiPayDoms[i];
-      if (uiPayDom && uiPayDom.parentNode && uiPayDom.parentNode.parentNode) {
-        let lineDom = uiPayDom.parentNode.parentNode as HTMLElement;
-        let warpDom = uiPayDom.parentNode as HTMLElement;
-        lineDom.className = "line";
-        warpDom.className = "warp-ui-play";
-      }
-    }
-  }
 }
 
 export default CustomUiEditor;

@@ -1,23 +1,17 @@
-.ui .editor {
+#ui-editor .editor {
   padding-right: 60px;
 }
-.ui p.line {
-  position: relative !important;
-}
-.ui span.warp-ui-play {
-  position: absolute !important;
-  top: 0 !important;
-  right: 0 !important;
-}
-.ui strong.ui-play {
-  position: absolute;
-  right: -60px;
-  cursor: pointer;
-}
-.ui .w-e-scroll {
+
+#ui-editor .w-e-scroll {
   overflow-y: visible !important;
 }
-.ui .mask {
+
+#ui-editor .w-e-text-container [data-slate-editor] p {
+  position: relative !important;
+  /* padding: 0 40px 0 10px; */
+}
+
+#ui-editor .mask {
   position: fixed;
   top: 0;
   right: 0;
@@ -35,6 +29,18 @@
   color: #14549C;
   border: 0;
   background-color: var(--w-e-textarea-slight-bg-color);
+}
+
+#ui-editor span.warp-ui-play {
+  position: absolute !important;
+  top: 0 !important;
+  right: 0 !important;
+}
+
+#ui-editor .ui-play {
+  position: absolute;
+  right: -60px;
+  cursor: pointer;
 }
 
 #ui-editor .warn {

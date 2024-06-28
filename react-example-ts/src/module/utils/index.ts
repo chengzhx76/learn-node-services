@@ -15,9 +15,9 @@ export const removeEditorNode = (nodeType: string, editor: IDomEditor) => {
   });
 
   for (const [node, path] of descendantNodes) {
-      if (DomEditor.checkNodeType(node, nodeType)) {
-        removePath = path
-      }
+    if (DomEditor.checkNodeType(node, nodeType)) {
+      removePath = path
+    }
   }
   if (removePath.length > 0) {
     SlateTransforms.removeNodes(editor, { at: removePath });
